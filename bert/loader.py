@@ -123,15 +123,15 @@ def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_s
     val_idx = int(total_length * val_size) + train_idx
 
 
-    train_dataset = TextDataset(input_dir = input_dir,filename = filename,label_type =label_type,split = True)
+    train_dataset = TextDataset(input_dir,filename,label_type,split = True)
     train_dataset.x_list = dataset.x_list[:train_idx]
     train_dataset.y_list = dataset.y_list[:train_idx]
         
-    val_dataset = TextDataset(input_dir = input_dir,filename = filename,label_type =label_type,split = True)
+    val_dataset = TextDataset(input_dir,filename,label_type,split = True)
     val_dataset.x_list = dataset.x_list[train_idx:val_idx]
     val_dataset.y_list = dataset.y_list[train_idx:val_idx]
 
-    test_dataset = TextDataset(input_dir = input_dir,filename = filename,label_type =label_type,split = True)
+    test_dataset = TextDataset(input_dir,filename ,label_type,split = True)
     test_dataset.x_list = dataset.x_list[val_idx:total_length]
     test_dataset.y_list = dataset.y_list[val_idx:total_length]
 
