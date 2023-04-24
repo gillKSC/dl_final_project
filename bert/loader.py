@@ -5,20 +5,31 @@ from transformers import BertTokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
 ## Text Dataloader
 class TextDataset(Dataset):
-
+    
+    
     def __init__(self,
                  input_dir,
                  filename,
-                 label_type='binary',
-                 transforms=None):
+                 label_type = 'binary',
+                 transforms = None,
+                 split = False):
 
         self.num_certain = 0
         self.num_uncertain = 0
+        
+        
         with open(input_dir + filename, 'r') as f:
             self.data = json.load(f)
-
-        if label_type == 'binary':
-            self.x_list, self.y_list = self.parse_binary()
+            
+        
+        if split == False:
+            if label_type == 'binary':
+                self.x_list, self.y_list = self.parse_binary()
+        else:
+            self.x_list = list()
+            self.y_list = list()
+            
+            
 
     @staticmethod
     def concat_uncertain_sentence(sentence):
@@ -59,8 +70,7 @@ class TextDataset(Dataset):
 
         return {
             'input_ids': x_token['input_ids'][0],  # we only have one example in the batch
-            'attention_mask': x_token['attention_mask'][0],
-            # attention mask tells the model where tokens are padding
+            'attention_mask': x_token['attention_mask'][0], # attention mask tells the model where tokens are padding
             'labels': self.y_list[idx]  # labels are the answers (yes/no)
             }
 
@@ -103,22 +113,63 @@ class TextDataset(Dataset):
 
         assert len(x_list) == len(y_list)
         return x_list, y_list
+    
+      
+          
+     
+def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_size = 0.1):
+    total_length = len(dataset.x_list)
+    train_idx = int(total_length * train_size)
+    val_idx = int(total_length * val_size) + train_idx
+
+
+    train_dataset = TextDataset(input_dir = input_dir,filename = filename,label_type =label_type,split = True)
+    train_dataset.x_list = dataset.x_list[:train_idx]
+    train_dataset.y_list = dataset.y_list[:train_idx]
+        
+    val_dataset = TextDataset(input_dir = input_dir,filename = filename,label_type =label_type,split = True)
+    val_dataset.x_list = dataset.x_list[train_idx:val_idx]
+    val_dataset.y_list = dataset.y_list[train_idx:val_idx]
+
+    test_dataset = TextDataset(input_dir = input_dir,filename = filename,label_type =label_type,split = True)
+    test_dataset.x_list = dataset.x_list[val_idx:total_length]
+    test_dataset.y_list = dataset.y_list[val_idx:total_length]
+
+       
+    print("training data point", len(train_dataset))
+    print("validation data point", len(val_dataset))
+    print("teting data point", len(test_dataset))
+
+        
+    return train_dataset, val_dataset, test_dataset
+
+    
 
 if __name__ == '__main__':
-    input_dir = 'data/'
+    input_dir = '/Users/alexandra/Desktop/DL/dl_final_project/bert/data/'
     filename = 'bmc.json'
     label_type = 'binary'
-    train_batch_size = 3
+    train_batch_size = 5
 
 
-    train_dataset=TextDataset(input_dir, filename, label_type = label_type)
-    print("number of data point:", len(train_dataset))
-    print("number of certain point:", train_dataset.num_certain)
-    print("number of uncertain point:", train_dataset.num_uncertain)
+    #Get all data 
+    dataset = TextDataset(input_dir, filename, label_type = label_type)
+    print("total number of data point:", len(dataset))
+    print("total number of certain point:", dataset.num_certain)
+    print("total number of uncertain point:", dataset.num_uncertain)
+    
+    #split into train/val/test
+    train_dataset,val_dataset,test_dataset = split_data(dataset,input_dir,filename,label_type)
+
+    #put into different dataloader
     train_dataloader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=train_batch_size, shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=train_batch_size, shuffle=True)
+    
 
     print("Example:")
-    for i, (X, Y) in enumerate(train_dataloader):
-        print(X)
-        print(Y)
+    for i,sample in enumerate(train_dataloader):
+        print(i)
+        print(sample) 
+             
         raise Exception
