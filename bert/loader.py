@@ -166,7 +166,7 @@ if __name__ == '__main__':
     #put into different dataloader
     train_dataloader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=val_batch_size, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=train_batch_size, shuffle=True)
     
 
     print("Example:")

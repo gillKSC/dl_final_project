@@ -186,18 +186,50 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
         '''
     return mymodel
 
+def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_size = 0.1):
+    total_length = len(dataset.x_list)
+    train_idx = int(total_length * train_size)
+    val_idx = int(total_length * val_size) + train_idx
+
+
+    train_dataset = TextDataset(input_dir,filename,label_type,split = True)
+    train_dataset.x_list = dataset.x_list[:train_idx]
+    train_dataset.y_list = dataset.y_list[:train_idx]
+        
+    val_dataset = TextDataset(input_dir,filename,label_type,split = True)
+    val_dataset.x_list = dataset.x_list[train_idx:val_idx]
+    val_dataset.y_list = dataset.y_list[train_idx:val_idx]
+
+    test_dataset = TextDataset(input_dir,filename ,label_type,split = True)
+    test_dataset.x_list = dataset.x_list[val_idx:total_length]
+    test_dataset.y_list = dataset.y_list[val_idx:total_length]
+
+       
+    print("training data point", len(train_dataset))
+    print("validation data point", len(val_dataset))
+    print("teting data point", len(test_dataset))
+
+        
+    return train_dataset, val_dataset, test_dataset
+
 
 def pre_process(model_name, batch_size, device, input_dir, filename, label_type='binary', num_labels=2, small_subset=True):
 
-    train_dataset = TextDataset(input_dir, filename, label_type=label_type)
-    print(" >>>>>>>> Initializing the data loaders ... ")
+    dataset = TextDataset(input_dir, filename, label_type = label_type)
+    train_dataset,val_dataset,test_dataset = split_data(dataset,input_dir,filename,label_type)
+    
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
+    validation_dataloader = DataLoader(val_dataset, batch_size=batch_size)
 
+    print(" >>>>>>>> Initializing the data loaders ... ")
+    
     if small_subset:
-        train_mask = range(10)
+        train_mask = range(5)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size,
                                       sampler=SubsetRandomSampler(train_mask))
-    #validation_dataloader = DataLoader(validation_dataset, batch_size=batch_size)
+        validation_dataloader = DataLoader(val_dataset, batch_size=batch_size,
+                                      sampler=SubsetRandomSampler(train_mask))
+        
     #test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 
     # from Hugging Face (transformers), read their documentation to do this.
@@ -206,7 +238,7 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
 
     print("Moving model to device ..." + str(device))
     pretrained_model.to(device)
-    return pretrained_model, train_dataloader#, validation_dataloader, test_dataloader
+    return pretrained_model, train_dataloader, validation_dataloader #, test_dataloader
 
 
 # the entry point of the program
@@ -223,7 +255,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     print(f"Specified arguments: {args}")
-    input_dir = 'data/'
+    input_dir = '/Users/alexandra/Desktop/DL/dl_final_project/bert/data/'
     filename = 'bmc.json'
     # Handling argparse for small_subset param
 
@@ -234,7 +266,7 @@ if __name__ == "__main__":
         small_subset = False
 
     # load the data and models
-    pretrained_model, train_dataloader = pre_process(args.model,
+    pretrained_model, train_dataloader,validation_dataloader = pre_process(args.model,
                                                      args.batch_size,
                                                      args.device,
                                                      input_dir,
@@ -248,10 +280,11 @@ if __name__ == "__main__":
 
     # print the GPU memory usage just to make sure things are alright
     print_gpu_memory()
-    '''
+    
     val_accuracy = evaluate_model(trained_model, validation_dataloader, args.device)
     print(f" - Average DEV metrics: accuracy={val_accuracy}")
 
+    '''
     test_accuracy = evaluate_model(trained_model, test_dataloader, args.device)
     print(f" - Average TEST metrics: accuracy={test_accuracy}")
     '''
