@@ -150,6 +150,8 @@ if __name__ == '__main__':
     filename = 'bmc.json'
     label_type = 'binary'
     train_batch_size = 5
+    val_batch_size = 5
+    test_batch_size = 5
 
 
     #Get all data 
@@ -163,8 +165,8 @@ if __name__ == '__main__':
 
     #put into different dataloader
     train_dataloader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=train_batch_size, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=train_batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=val_batch_size, shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=True)
     
 
     print("Example:")
