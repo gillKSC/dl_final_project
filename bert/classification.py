@@ -11,8 +11,7 @@ import random
 import numpy as np
 from loader import TextDataset
 from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
-import logging
-logger = logging.getLogger('UST')
+
 
 
 
@@ -243,50 +242,6 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
     pretrained_model.to(device)
     return pretrained_model, train_dataloader, validation_dataloader #, test_dataloader
 
-
-def mc_dropout_evaluate(model, gpus, classes, x, T=30, batch_size=256, training=True):
-    
-    y_T = np.zeros((T,len(x['input_ids']), classes))
-    acc = None
-
-    logger.info ("Yielding predictions looping over ...")
-    strategy = tf.distribute.MirroredStrategy()
-    data=tf.data.Dataset.from_tensor_slices(x).batch(batch_size*gpus)
-    dist_data = strategy.experimental_distribute_dataset(data)
-
-    for i in range(T):
-
-        y_pred = []
-        with strategy.scope():
-            def eval_step(inputs):
-                return model(inputs, training=training).numpy()#[:,0]
-
-            def distributed_eval_step(dataset_inputs):
-                return strategy.experimental_run_v2(eval_step, args=(dataset_inputs,))
-
-            for batch in dist_data:
-                pred = distributed_eval_step(batch)
-                for gpu in range(gpus):
-                    y_pred.extend(pred.values[gpu])
-
-        #converting logits to probabilities
-        y_T[i] = tf.nn.softmax(np.array(y_pred))
-
-    logger.info (y_T)
-
-    #compute mean
-    y_mean = np.mean(y_T, axis=0)
-    assert y_mean.shape == (len(x['input_ids']), classes)
-
-    #compute majority prediction
-    y_pred = np.array([np.argmax(np.bincount(row)) for row in np.transpose(np.argmax(y_T, axis=-1))])
-    assert y_pred.shape == (len(x['input_ids']),)
-
-    #compute variance
-    y_var = np.var(y_T, axis=0)
-    assert y_var.shape == (len(x['input_ids']), classes)
-
-    return y_mean, y_var, y_pred, y_T
 
 
 
