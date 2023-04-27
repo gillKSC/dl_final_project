@@ -2,9 +2,9 @@ from torch.utils.data import Dataset, DataLoader
 import json
 from collections import Counter
 
-from transformers import BertTokenizer
-tokenizer = BertTokenizer.from_pretrained('distilbert-base-uncased')
+from transformers import DistilBertTokenizerFast
 
+tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
 ## Text Dataloader
 class TextDataset(Dataset):
     
@@ -209,8 +209,8 @@ def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_s
     
 
 if __name__ == '__main__':
-    input_dir = '/workspace/dl_final_project/bert/data'
-    filename = 'bmc.json'
+    input_dir = './data'
+    filename = 'wiki.json'
     label_type = 'multi'
     train_batch_size = 2
     val_batch_size = 5
