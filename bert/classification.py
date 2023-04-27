@@ -221,8 +221,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     print(f"Specified arguments: {args}")
-    input_dir = '/workspace/dl_final_project/bert/data/'
-    filename = 'bmc.json'
+    input_dir = './data/'
+    filename = 'wiki.json'
     # Handling argparse for small_subset param
 
     small_subset = str(args.small_subset).upper()
