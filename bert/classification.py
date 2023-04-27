@@ -30,56 +30,6 @@ def print_gpu_memory():
         print(p.decode("utf-8"))
 
 
-class BoolQADataset(torch.utils.data.Dataset):
-    """
-    Dataset for the dataset of BoolQ questions and answers
-    """
-
-    def __init__(self, passages, questions, answers, tokenizer, max_len):
-        self.passages = passages
-        self.questions = questions
-        self.answers = answers
-        self.tokenizer = tokenizer
-        self.max_len = max_len
-
-    def __len__(self):
-        return len(self.answers)
-
-    def __getitem__(self, index):
-        """
-        This function is called by the DataLoader to get an instance of the data
-        :param index:
-        :return:
-        """
-
-        passage = str(self.passages[index])
-        question = self.questions[index]
-        answer = self.answers[index]
-
-        # this is input encoding for your model. Note, question comes first since we are doing question answering
-        # and we don't wnt it to be truncated if the passage is too long
-        input_encoding = question + " [SEP] " + passage
-
-        # encode_plus will encode the input and return a dictionary of tensors
-        encoded_review = self.tokenizer.encode_plus(
-            input_encoding,
-            add_special_tokens=True,
-            max_length=self.max_len,
-            return_token_type_ids=False,
-            return_attention_mask=True,
-            return_tensors="pt",
-            padding="max_length",
-            truncation=True
-        )
-
-        return {
-            'input_ids': encoded_review['input_ids'][0],  # we only have one example in the batch
-            'attention_mask': encoded_review['attention_mask'][0],
-            # attention mask tells the model where tokens are padding
-            'labels': torch.tensor(answer, dtype=torch.long)  # labels are the answers (yes/no)
-        }
-
-
 def evaluate_model(model, dataloader, device):
     """ Evaluate a PyTorch Model
     :param torch.nn.Module model: the model to be evaluated
@@ -97,10 +47,15 @@ def evaluate_model(model, dataloader, device):
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
         output = model(input_ids=input_ids, attention_mask=attention_mask)
-
+        
+       
         predictions = output.logits
         predictions = torch.argmax(predictions, dim=1)
+#         print(predictions)
+#         print(batch['labels'])
+#         raise Exception
         dev_accuracy.add_batch(predictions=predictions, references=batch['labels'])
+      
 
     # compute and return metrics
     return dev_accuracy.compute()
@@ -181,11 +136,11 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
         # print evaluation metrics
         print(f" ===> Epoch {epoch + 1}")
         print(f" - Average training metrics: accuracy={train_accuracy.compute()}")
-        '''
+        
         # normally, validation would be more useful when training for many epochs
         val_accuracy = evaluate_model(mymodel, validation_dataloader, device)
         print(f" - Average validation metrics: accuracy={val_accuracy}")
-        '''
+        
     return mymodel
 
 def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_size = 0.1):
@@ -219,7 +174,12 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
 
     dataset = TextDataset(input_dir, filename, label_type = label_type)
     train_dataset,val_dataset,test_dataset = split_data(dataset,input_dir,filename,label_type)
+#     train_mask = range(int(len(dataset)*0.7))
+#     val_mask = range(int(len(dataset)*0.7), int(len(dataset)*0.85))
+#     test_mask = range(int(len(dataset)*0.85), int(len(dataset)*1))
     
+#     train_dataloader = DataLoader(dataset, batch_size=batch_size, sampler=SubsetRandomSampler(train_mask))
+#     validation_dataloader = DataLoader(dataset, batch_size=batch_size, sampler=SubsetRandomSampler(train_mask))
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
     validation_dataloader = DataLoader(val_dataset, batch_size=batch_size)
 
@@ -257,10 +217,11 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--model", type=str, default="distilbert-base-uncased")
+    parser.add_argument("--type_classification", type=str, default="binary")
 
     args = parser.parse_args()
     print(f"Specified arguments: {args}")
-    input_dir = '/Users/alexandra/Desktop/DL/dl_final_project/bert/data/'
+    input_dir = '/workspace/dl_final_project/bert/data/'
     filename = 'bmc.json'
     # Handling argparse for small_subset param
 
@@ -269,6 +230,11 @@ if __name__ == "__main__":
         small_subset = True
     else:
         small_subset = False
+    
+    if str(args.type_classification) == 'binary':
+        num_class = 2
+    elif str(args.type_classification) == 'multi':
+        num_class = 6
 
     # load the data and models
     pretrained_model, train_dataloader,validation_dataloader = pre_process(args.model,
@@ -276,6 +242,8 @@ if __name__ == "__main__":
                                                      args.device,
                                                      input_dir,
                                                      filename,
+                                                     label_type=args.type_classification,
+                                                     num_labels = num_class,
                                                      small_subset=small_subset
                                                     )
 

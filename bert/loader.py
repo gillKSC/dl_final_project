@@ -1,11 +1,12 @@
 from torch.utils.data import Dataset, DataLoader
 import json
-from transformers import BertTokenizer
+from collections import Counter
 
-tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
+from transformers import BertTokenizer
+tokenizer = BertTokenizer.from_pretrained('distilbert-base-uncased')
+
 ## Text Dataloader
 class TextDataset(Dataset):
-    
     
     def __init__(self,
                  input_dir,
@@ -16,7 +17,12 @@ class TextDataset(Dataset):
 
         self.num_certain = 0
         self.num_uncertain = 0
-        
+        self.uncertainty_label = {"speculation_hypo_doxastic _": 1, 
+                                  "speculation_hypo_investigation _": 2,
+                                  "speculation_modal_probable_": 3,
+                                  "speculation_hypo_condition _": 4,
+                                  "multiple_uncertain": 5
+                                  }
         
         with open(input_dir + filename, 'r') as f:
             self.data = json.load(f)
@@ -25,20 +31,48 @@ class TextDataset(Dataset):
         if split == False:
             if label_type == 'binary':
                 self.x_list, self.y_list = self.parse_binary()
+            elif label_type == 'multi':
+                self.x_list, self.y_list = self.parse_multi()
         else:
             self.x_list = list()
             self.y_list = list()
-            
+        
             
 
-    @staticmethod
-    def concat_uncertain_sentence(sentence):
+    def max_occurrences(self, lst):
+        """
+        Returns the item with the maximum occurrences in a list. 
+        If multiple elements have the same maximum occurrences, return -1.
+        """
+        count = Counter(lst)
+        max_count = max(count.values())
+        max_items = [k for k,v in count.items() if v == max_count]
+        if len(max_items) > 1 and count[max_items[0]] == max_count:
+            return -1
+        else:
+            return max_items[0]
+
+    def find_label(self, sentence):
+        if type(sentence['ccue']) == dict:
+            label_type = sentence['ccue']['@type']
+            return self.uncertainty_label[label_type]
+        elif type(sentence['ccue']) == list:
+            lst = []
+            for s in sentence['ccue']:
+                lst.append(self.uncertainty_label[s['@type']])
+            label = self.max_occurrences(lst)
+            if label == -1:
+                label = self.uncertainty_label["multiple_uncertain"]
+            return label
+
+    def concat_uncertain_sentence(self, sentence, multi_label = False):
         """
           sentence: dict that contains 'ccue' keys
           return: complete str sentence, class label
         """
-        ## TODO: find class label y:
         y = 0
+        if multi_label:
+            y = self.find_label(sentence)
 
         # In some sentence, there's no head
         try:
@@ -113,7 +147,36 @@ class TextDataset(Dataset):
 
         assert len(x_list) == len(y_list)
         return x_list, y_list
-    
+
+    def parse_multi(self):
+        certain = 0
+        x_list = []
+        y_list = []
+        Document = self.data['Annotation']['DocumentSet']['Document']
+        for doc in Document:
+            DocumentPart = doc['DocumentPart']
+            for paragraph in DocumentPart:
+                try:
+                    if type(paragraph) != dict:
+                        raise KeyError()
+                    paragraph['Sentence']
+                except KeyError:
+                    continue
+                for sentence in paragraph['Sentence']:
+                    if type(sentence) != dict:
+                        continue
+                    if 'ccue' in sentence:  # has uncertain keyword
+                        self.num_uncertain += 1
+                        x, y = self.concat_uncertain_sentence(sentence, multi_label = True)
+                        x_list.append(x)
+                        y_list.append(y)
+                    else:  # no uncertain keyword
+                        self.num_certain += 1
+                        y_list.append(certain)
+                        x_list.append(sentence['#text'])
+
+        assert len(x_list) == len(y_list)
+        return x_list, y_list
       
           
      
@@ -146,10 +209,10 @@ def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_s
     
 
 if __name__ == '__main__':
-    input_dir = '/Users/alexandra/Desktop/DL/dl_final_project/bert/data/'
+    input_dir = '/workspace/dl_final_project/bert/data'
     filename = 'bmc.json'
-    label_type = 'binary'
-    train_batch_size = 5
+    label_type = 'multi'
+    train_batch_size = 2
     val_batch_size = 5
     test_batch_size = 5
 
@@ -170,8 +233,7 @@ if __name__ == '__main__':
     
 
     print("Example:")
-    for i,sample in enumerate(train_dataloader):
-        print(i)
-        print(sample) 
-             
+    for i, (X, Y) in enumerate(train_dataloader):
+        print(X)
+        print(Y)
         raise Exception
