@@ -85,6 +85,8 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
     :return None
     """
 
+    Val_acc_epoch = []
+
     # here, we use the AdamW optimizer. Use torch.optim.Adam.
     # instantiate it on the untrained model parameters with a learning rate of 5e-5
     print(" >>>>>>>>  Initializing optimizer")
@@ -144,6 +146,7 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
 
             # update metrics
             train_accuracy.add_batch(predictions=predictions, references=labels)
+            
 
         # print evaluation metrics
         print(f" ===> Epoch {epoch + 1}")
@@ -151,8 +154,12 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
         
         # normally, validation would be more useful when training for many epochs
         val_accuracy = evaluate_model(mymodel, validation_dataloader, device)
+        Val_acc_epoch.append(val_accuracy)
         print(f" - Average validation metrics: accuracy={val_accuracy}")
         
+    
+    plt.plot(Val_acc_epoch,xlabel = "epoch",ylabel = "validation accuracy")
+
     return mymodel
 
 def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_size = 0.1):
@@ -213,8 +220,6 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
     print("Moving model to device ..." + str(device))
     pretrained_model.to(device)
     return pretrained_model, train_dataloader, validation_dataloader #, test_dataloader
-
-
 
 
 
