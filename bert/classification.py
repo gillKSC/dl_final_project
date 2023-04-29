@@ -11,8 +11,9 @@ import random
 import numpy as np
 from loader import TextDataset
 from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
-
-
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
 
 
 def print_gpu_memory():
@@ -30,18 +31,23 @@ def print_gpu_memory():
         print(p.decode("utf-8"))
 
 
-def evaluate_model(model, dataloader, device):
+def evaluate_model(model, dataloader, device, acc_only=True):
     """ Evaluate a PyTorch Model
     :param torch.nn.Module model: the model to be evaluated
     :param torch.utils.data.DataLoader test_dataloader: DataLoader containing testing examples
     :param torch.device device: the device that we'll be training on
-    :return accuracy
+    :param bool acc_only: return only accuracy if true, else also return ground truth and pred as tuple
+    :return accuracy (also return ground truth and pred as tuple if acc_only=False)
     """
     # load metrics
     dev_accuracy = evaluate.load('accuracy')
 
     # turn model into evaluation mode
     model.eval()
+
+    #Y_true and Y_pred store for epoch
+    Y_true = []
+    Y_pred = []
 
     for batch in dataloader:
         input_ids = batch['input_ids'].to(device)
@@ -54,11 +60,17 @@ def evaluate_model(model, dataloader, device):
 #         print(predictions)
 #         print(batch['labels'])
 #         raise Exception
+        
+        Y_true.append(batch['labels'].tolist())
+        Y_pred.append(predictions.tolist())
         dev_accuracy.add_batch(predictions=predictions, references=batch['labels'])
       
 
     # compute and return metrics
-    return dev_accuracy.compute()
+    Y_true = np.squeeze(np.array(Y_true))
+    Y_pred = np.squeeze(np.array(Y_pred))
+    return dev_accuracy.compute() if acc_only else (dev_accuracy.compute(),Y_true,Y_pred)
+
 
 
 def train(mymodel, num_epochs, train_dataloader, device, lr):
@@ -164,7 +176,7 @@ def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_s
        
     print("training data point", len(train_dataset))
     print("validation data point", len(val_dataset))
-    print("teting data point", len(test_dataset))
+    print("testing data point", len(test_dataset))
 
         
     return train_dataset, val_dataset, test_dataset
@@ -254,8 +266,16 @@ if __name__ == "__main__":
     # print the GPU memory usage just to make sure things are alright
     print_gpu_memory()
     
-    val_accuracy = evaluate_model(trained_model, validation_dataloader, args.device)
+    (val_accuracy,Y_true,Y_pred) = evaluate_model(trained_model, validation_dataloader, args.device, acc_only=False)
+    print(val_accuracy)
+    print(Y_true)
+    print(Y_pred)
     print(f" - Average DEV metrics: accuracy={val_accuracy}")
+
+    confusion_matrix_array = confusion_matrix(Y_true, Y_pred)
+    cm_display = ConfusionMatrixDisplay(confusion_matrix = confusion_matrix_array)
+    cm_display.plot()
+    plt.show(block=True)
 
     '''
     test_accuracy = evaluate_model(trained_model, test_dataloader, args.device)
