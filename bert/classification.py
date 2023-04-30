@@ -14,6 +14,7 @@ from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
+import plotext
 
 
 def print_gpu_memory():
@@ -311,7 +312,7 @@ if __name__ == "__main__":
 
 
     print(" >>>>>>>>  Starting training ... ")
-    trained_model = train(pretrained_model, args.num_epochs, train_dataloader, args.device, args.lr)
+    trained_model = train(pretrained_model, args.num_epochs, train_dataloader, validation_dataloader, args.device, args.lr)
 
     # print the GPU memory usage just to make sure things are alright
     print_gpu_memory()
