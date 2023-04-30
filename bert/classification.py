@@ -195,7 +195,7 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         
         if (epoch > 1) and (val_acc_epoch[epoch] > val_acc_epoch[epoch-1]):
             saved_model_path = './my_saved_model'
-            tf.saved_model.save(model, saved_model_path)
+            torch.save(mymodel, saved_model_path)
         
         
 
