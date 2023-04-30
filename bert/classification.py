@@ -68,8 +68,12 @@ def evaluate_model(model, dataloader, device, acc_only=True):
 #         print(batch['labels'])
 #         raise Exception
         
-        Y_true.append(batch['labels'].tolist())
-        Y_pred.append(predictions.tolist())
+#         print(batch['labels'].tolist())
+#         raise Exception
+#         Y_true.append(batch['labels'].tolist())
+#         Y_pred.append(predictions.tolist())
+        Y_true += batch['labels'].tolist()
+        Y_pred += predictions.tolist()
         dev_accuracy.add_batch(predictions=predictions, references=batch['labels'])
         
         val_accuracy_batch = evaluate.load('accuracy')
@@ -79,8 +83,8 @@ def evaluate_model(model, dataloader, device, acc_only=True):
       
 
     # compute and return metrics
-    Y_true = np.squeeze(np.array(Y_true))
-    Y_pred = np.squeeze(np.array(Y_pred))
+#     Y_true = np.squeeze(np.array(Y_true))
+#     Y_pred = np.squeeze(np.array(Y_pred))
     
     with open('val_acc_batch.pickle', 'ab') as f:
         pickle.dump((val_acc_batch), f)
@@ -255,7 +259,6 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
 #     validation_dataloader = DataLoader(dataset, batch_size=batch_size, sampler=SubsetRandomSampler(train_mask))
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
     validation_dataloader = DataLoader(val_dataset, batch_size=batch_size)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 
     print(" >>>>>>>> Initializing the data loaders ... ")
     
@@ -274,13 +277,13 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
 
     print("Moving model to device ..." + str(device))
     pretrained_model.to(device)
-    return pretrained_model, train_dataloader, validation_dataloader, test_dataloader
+    return pretrained_model, train_dataloader, validation_dataloader #, test_dataloader
 
 
 
 # the entry point of the program
 if __name__ == "__main__":
-    print(f"use cuda: {torch.cuda.is_available()}")
+    print(torch.cuda.is_available())
     parser = argparse.ArgumentParser()
     parser.add_argument("--experiment", type=str, default=None)
     parser.add_argument("--small_subset", type=str, default=False)
@@ -309,7 +312,7 @@ if __name__ == "__main__":
         num_class = 6
 
     # load the data and models
-    pretrained_model, train_dataloader,validation_dataloader,test_dataloader = pre_process(args.model,
+    pretrained_model, train_dataloader,validation_dataloader = pre_process(args.model,
                                                      args.batch_size,
                                                      args.device,
                                                      input_dir,
@@ -326,14 +329,17 @@ if __name__ == "__main__":
     # print the GPU memory usage just to make sure things are alright
     print_gpu_memory()
     
-    (test_accuracy,Y_true,Y_pred) = evaluate_model(trained_model, test_dataloader, args.device, acc_only=False)
-    print(f" - Average DEV metrics: test accuracy={test_accuracy}")
+    (val_accuracy,Y_true,Y_pred) = evaluate_model(trained_model, validation_dataloader, args.device, acc_only=False)
+    print(val_accuracy)
+    print(Y_true)
+    print(Y_pred)
+    print(f" - Average DEV metrics: accuracy={val_accuracy}")
 
     confusion_matrix_array = confusion_matrix(Y_true, Y_pred)
     cm_display = ConfusionMatrixDisplay(confusion_matrix = confusion_matrix_array)
-    cm_display.savefig('results/test_classification_confusion_matrix.png', bbox_inches='tight')
     cm_display.plot()
     plt.show(block=True)
+    plt.savefig('confusion_matrix.jpg')
 
     '''
     test_accuracy = evaluate_model(trained_model, test_dataloader, args.device)
