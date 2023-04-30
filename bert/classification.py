@@ -52,7 +52,6 @@ def evaluate_model(model, dataloader, device, acc_only=True):
     Y_true = []
     Y_pred = []
     
-    val_acc_batch = []
 
     for batch in dataloader:
         input_ids = batch['input_ids'].to(device)
@@ -74,19 +73,19 @@ def evaluate_model(model, dataloader, device, acc_only=True):
         Y_pred += predictions.tolist()
         dev_accuracy.add_batch(predictions=predictions, references=batch['labels'])
         
-        val_accuracy_batch = evaluate.load('accuracy')
-        val_accuracy_batch.add_batch(predictions=predictions, references=batch['labels'])
-        val_acc = val_accuracy_batch.compute()
-        val_acc_batch.append(val_acc['accuracy'])
+        if acc_only == True:
+            val_accuracy_batch = evaluate.load('accuracy')
+            val_accuracy_batch.add_batch(predictions=predictions, references=batch['labels'])
+            val_acc = val_accuracy_batch.compute()
+            graph('val_acc_batch',val_acc["accuracy"])
+            print(val_acc)
       
 
     # compute and return metrics
 #     Y_true = np.squeeze(np.array(Y_true))
 #     Y_pred = np.squeeze(np.array(Y_pred))
     
-    with open('val_acc_batch.pickle', 'ab') as f:
-        pickle.dump((val_acc_batch), f)
-    
+
     
     return dev_accuracy.compute() if acc_only else (dev_accuracy.compute(),Y_true,Y_pred)
 
@@ -105,18 +104,23 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
     train_acc_epoch = []
     train_acc_batch = []
     val_acc_epoch = []
+    val_acc_batch = []
 
     with open('train_acc_epoch' + '.pickle', 'wb') as f:
         pickle.dump((train_acc_epoch), f)
         f.close()
 
     with open('train_acc_batch' + '.pickle', 'wb') as f:
-        pickle.dump((train_acc_epoch), f)
+        pickle.dump((train_acc_batch), f)
         f.close()
         
     with open('val_acc_epoch' + '.pickle', 'wb') as f:
         pickle.dump((train_acc_epoch), f)
         f.close()    
+
+    with open('val_acc_batch' + '.pickle', 'wb') as f:
+        pickle.dump((val_acc_batch), f)
+        f.close()
 
 
     # here, we use the AdamW optimizer. Use torch.optim.Adam.
@@ -186,7 +190,7 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
             # update metrics for train batch
             train_accuracy_batch.add_batch(predictions=predictions, references=labels)
             acc_train = train_accuracy_batch.compute()
-            graph('train_acc_epoch',acc_train["accuracy"])
+            graph('train_acc_batch',acc_train["accuracy"])
 
                   
                    
@@ -200,16 +204,15 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         
         # normally, validation would be more useful when training for many epochs
         val_accuracy = evaluate_model(mymodel, validation_dataloader, device)
-        
-        #add val epoch
         graph('val_acc_epoch',val_accuracy["accuracy"])
+        val_acc_epoch.append(val_accuracy["accuracy"])
+        
         print(f" - Average validation metrics: accuracy={val_accuracy}")
         
         
         if (epoch > 1) and (val_acc_epoch[epoch] > val_acc_epoch[epoch-1]):
             saved_model_path = './my_saved_model'
             torch.save(mymodel, saved_model_path)
-        
     
     
     return mymodel
@@ -271,7 +274,7 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
     print(" >>>>>>>> Initializing the data loaders ... ")
     
     if small_subset:
-        train_mask = range(10)
+        train_mask = range(50)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size,
                                       sampler=SubsetRandomSampler(train_mask))
         validation_dataloader = DataLoader(val_dataset, batch_size=batch_size,
@@ -338,9 +341,9 @@ if __name__ == "__main__":
     print_gpu_memory()
     
     (val_accuracy,Y_true,Y_pred) = evaluate_model(trained_model, validation_dataloader, args.device, acc_only=False)
-    print(val_accuracy)
-    print(Y_true)
-    print(Y_pred)
+    #print(val_accuracy)
+    #print(Y_true)
+    #print(Y_pred)
     print(f" - Average DEV metrics: accuracy={val_accuracy}")
 
     confusion_matrix_array = confusion_matrix(Y_true, Y_pred)
