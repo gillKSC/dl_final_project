@@ -66,8 +66,12 @@ def evaluate_model(model, dataloader, device, acc_only=True):
 #         print(batch['labels'])
 #         raise Exception
         
-        Y_true.append(batch['labels'].tolist())
-        Y_pred.append(predictions.tolist())
+#         print(batch['labels'].tolist())
+#         raise Exception
+#         Y_true.append(batch['labels'].tolist())
+#         Y_pred.append(predictions.tolist())
+        Y_true += batch['labels'].tolist()
+        Y_pred += predictions.tolist()
         dev_accuracy.add_batch(predictions=predictions, references=batch['labels'])
         
         val_accuracy_batch = evaluate.load('accuracy')
@@ -77,8 +81,8 @@ def evaluate_model(model, dataloader, device, acc_only=True):
       
 
     # compute and return metrics
-    Y_true = np.squeeze(np.array(Y_true))
-    Y_pred = np.squeeze(np.array(Y_pred))
+#     Y_true = np.squeeze(np.array(Y_true))
+#     Y_pred = np.squeeze(np.array(Y_pred))
     
     with open('val_acc_batch.pickle', 'ab') as f:
         pickle.dump((val_acc_batch), f)
@@ -343,6 +347,7 @@ if __name__ == "__main__":
     cm_display = ConfusionMatrixDisplay(confusion_matrix = confusion_matrix_array)
     cm_display.plot()
     plt.show(block=True)
+    plt.savefig('confusion_matrix.jpg')
 
     '''
     test_accuracy = evaluate_model(trained_model, test_dataloader, args.device)
