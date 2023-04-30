@@ -71,11 +71,8 @@ def evaluate_model(model, dataloader, device, acc_only=True):
     Y_pred = np.squeeze(np.array(Y_pred))
     return dev_accuracy.compute() if acc_only else (dev_accuracy.compute(),Y_true,Y_pred)
 
-
-
-def train(mymodel, num_epochs, train_dataloader, device, lr):
+def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, lr):
     """ Train a PyTorch Module
-
     :param torch.nn.Module mymodel: the model to be trained
     :param int num_epochs: number of epochs to train for
     :param torch.utils.data.DataLoader train_dataloader: DataLoader containing training examples
@@ -84,8 +81,13 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
     :param float lr: learning rate
     :return None
     """
+    
+    # store for plotting
+    train_acc_epoch = []
+    train_acc_batch = []
+    val_acc_epoch = []
+    val_acc_batch = []
 
-    Val_acc_epoch = []
 
     # here, we use the AdamW optimizer. Use torch.optim.Adam.
     # instantiate it on the untrained model parameters with a learning rate of 5e-5
@@ -110,10 +112,16 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
 
         # load metrics
         train_accuracy = evaluate.load('accuracy')
+        
 
         print(f"Epoch {epoch + 1} training:")
 
         for i, batch in enumerate(train_dataloader):
+            
+            #load metrics
+            val_accuracy_batch = evaluate.load('accuracy')
+            
+            train_accuracy_batch = evaluate.load('accuracy')
 
             """
             You need to make some changes here to make this function work.
@@ -144,23 +152,60 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
 
             predictions = torch.argmax(predictions, dim=1)
 
-            # update metrics
+            # update metrics for train epoch 
             train_accuracy.add_batch(predictions=predictions, references=labels)
             
-
+            # update metrics for train batch
+            train_accuracy_batch.add_batch(predictions=predictions, references=labels)
+            acc_train = train_accuracy_batch.compute()
+            train_acc_batch.append(acc_train["accuracy"])
+       
+            
+            #update metrics for validation batch
+            #option11: batch validation using a batch 
+            output = mymodel(input_ids=input_ids, attention_mask=attention_mask)
+            predictions = output.logits
+            predictions = torch.argmax(predictions, dim=1)
+            val_accuracy_batch.add_batch(predictions=predictions, references=labels)
+            acc_val = val_accuracy_batch.compute()
+            val_acc_batch.append(acc_val["accuracy"])
+            
+            
+            #obtion2: batch validation using all batches
+            #val_accuracy_batch = evaluate_model(mymodel, validation_dataloader, device)
+            #val_acc_batch.append(val_accuracy_batch["accuracy"])
+                   
+        #computer for train epoch
+        acc = train_accuracy.compute()
+        train_acc_epoch.append(acc["accuracy"])
+        
         # print evaluation metrics
         print(f" ===> Epoch {epoch + 1}")
-        print(f" - Average training metrics: accuracy={train_accuracy.compute()}")
+        print(f" - Average training metrics: accuracy={acc}")
         
         # normally, validation would be more useful when training for many epochs
         val_accuracy = evaluate_model(mymodel, validation_dataloader, device)
-        Val_acc_epoch.append(val_accuracy)
+        #add val epoch
+        val_acc_epoch.append(val_accuracy["accuracy"])
         print(f" - Average validation metrics: accuracy={val_accuracy}")
-        
-    
-    plt.plot(Val_acc_epoch,xlabel = "epoch",ylabel = "validation accuracy")
 
+    #plotting
+    plotext.subplot(1,1)
+    plotext.plot(train_acc_epoch, label='training')
+    plotext.plot(val_acc_epoch, label='validation')
+    plotext.xlabel('epoch')
+    plotext.ylabel('epoch accuracy')
+    
+    plotext.plot(1,2)
+    plotext.plot(val_acc_batch, label='validation')
+    plotext.plot(train_acc_batch, label='training')
+    plotext.xlabel('batch')
+    plotext.ylabel('batch accuracy')
+    plotext.show()
+    
     return mymodel
+
+
 
 def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_size = 0.1):
     total_length = len(dataset.x_list)
