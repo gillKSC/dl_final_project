@@ -197,7 +197,7 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
     plotext.xlabel('epoch')
     plotext.ylabel('epoch accuracy')
     
-    plotext.plot(1,2)
+    plotext.subplot(1,2)
     plotext.plot(val_acc_batch, label='validation')
     plotext.plot(train_acc_batch, label='training')
     plotext.xlabel('batch')
