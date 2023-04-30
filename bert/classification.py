@@ -198,7 +198,7 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         val_accuracy = evaluate_model(mymodel, validation_dataloader, device)
         
         #add val epoch
-        graph('val_acc_epoch',["accuracy"]acc_epoch)
+        graph('val_acc_epoch',val_accuracy["accuracy"])
         print(f" - Average validation metrics: accuracy={val_accuracy}")
         
         
