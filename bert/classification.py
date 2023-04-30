@@ -14,7 +14,8 @@ from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
-import plotext
+import pickle
+import matplotlib.pyplot as plt
 
 
 def print_gpu_memory():
@@ -42,6 +43,7 @@ def evaluate_model(model, dataloader, device, acc_only=True):
     """
     # load metrics
     dev_accuracy = evaluate.load('accuracy')
+    
 
     # turn model into evaluation mode
     model.eval()
@@ -49,6 +51,10 @@ def evaluate_model(model, dataloader, device, acc_only=True):
     #Y_true and Y_pred store for epoch
     Y_true = []
     Y_pred = []
+    
+    val_acc_batch = []
+    
+    
 
     for batch in dataloader:
         input_ids = batch['input_ids'].to(device)
@@ -62,14 +68,24 @@ def evaluate_model(model, dataloader, device, acc_only=True):
 #         print(batch['labels'])
 #         raise Exception
         
-        Y_true += batch['labels'].tolist()
-        Y_pred += predictions.tolist()
+        Y_true.append(batch['labels'].tolist())
+        Y_pred.append(predictions.tolist())
         dev_accuracy.add_batch(predictions=predictions, references=batch['labels'])
+        
+        val_accuracy_batch = evaluate.load('accuracy')
+        val_accuracy_batch.add_batch(predictions=predictions, references=batch['labels'])
+        val_acc = val_accuracy_batch.compute()
+        val_acc_batch.append(val_acc['accuracy'])
       
 
     # compute and return metrics
     Y_true = np.squeeze(np.array(Y_true))
     Y_pred = np.squeeze(np.array(Y_pred))
+    
+    with open('val_acc_batch.pickle', 'ab') as f:
+        pickle.dump((val_acc_batch), f)
+    
+    
     return dev_accuracy.compute() if acc_only else (dev_accuracy.compute(),Y_true,Y_pred)
 
 def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, lr):
@@ -87,7 +103,6 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
     train_acc_epoch = []
     train_acc_batch = []
     val_acc_epoch = []
-    val_acc_batch = []
 
 
     # here, we use the AdamW optimizer. Use torch.optim.Adam.
@@ -160,21 +175,7 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
             train_accuracy_batch.add_batch(predictions=predictions, references=labels)
             acc_train = train_accuracy_batch.compute()
             train_acc_batch.append(acc_train["accuracy"])
-       
-            
-            #update metrics for validation batch
-            #option11: batch validation using a batch 
-            output = mymodel(input_ids=input_ids, attention_mask=attention_mask)
-            predictions = output.logits
-            predictions = torch.argmax(predictions, dim=1)
-            val_accuracy_batch.add_batch(predictions=predictions, references=labels)
-            acc_val = val_accuracy_batch.compute()
-            val_acc_batch.append(acc_val["accuracy"])
-            
-            
-            #obtion2: batch validation using all batches
-            #val_accuracy_batch = evaluate_model(mymodel, validation_dataloader, device)
-            #val_acc_batch.append(val_accuracy_batch["accuracy"])
+                  
                    
         #computer for train epoch
         acc = train_accuracy.compute()
@@ -186,23 +187,29 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         
         # normally, validation would be more useful when training for many epochs
         val_accuracy = evaluate_model(mymodel, validation_dataloader, device)
+        
         #add val epoch
         val_acc_epoch.append(val_accuracy["accuracy"])
         print(f" - Average validation metrics: accuracy={val_accuracy}")
+        
+        
+        if (epoch > 1) and (val_acc_epoch[epoch] > val_acc_epoch[epoch-1]):
+            saved_model_path = './my_saved_model'
+            tf.saved_model.save(model, saved_model_path)
+        
+        
 
-    #plotting
-    plotext.subplot(1,1)
-    plotext.plot(train_acc_epoch, label='training')
-    plotext.plot(val_acc_epoch, label='validation')
-    plotext.xlabel('epoch')
-    plotext.ylabel('epoch accuracy')
-    
-    plotext.subplot(1,2)
-    plotext.plot(val_acc_batch, label='validation')
-    plotext.plot(train_acc_batch, label='training')
-    plotext.xlabel('batch')
-    plotext.ylabel('batch accuracy')
-    plotext.show()
+    with open('train_acc_epoch.pickle', 'ab') as f:
+        pickle.dump((train_acc_epoch), f)
+            
+        
+    with open('train_acc_batch.pickle', 'ab') as f:
+        pickle.dump((train_acc_batch), f)
+            
+      
+    with open('val_acc_epoch.pickle', 'ab') as f:
+        pickle.dump((val_acc_epoch), f)
+        
     
     return mymodel
 
@@ -231,6 +238,7 @@ def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_s
     print("validation data point", len(val_dataset))
     print("testing data point", len(test_dataset))
 
+   
         
     return train_dataset, val_dataset, test_dataset
 
@@ -251,7 +259,7 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
     print(" >>>>>>>> Initializing the data loaders ... ")
     
     if small_subset:
-        train_mask = range(5)
+        train_mask = range(10)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size,
                                       sampler=SubsetRandomSampler(train_mask))
         validation_dataloader = DataLoader(val_dataset, batch_size=batch_size,
@@ -275,7 +283,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--experiment", type=str, default=None)
     parser.add_argument("--small_subset", type=str, default=False)
-    parser.add_argument("--num_epochs", type=int, default=1)
+    parser.add_argument("--num_epochs", type=int, default=5)
     parser.add_argument("--lr", type=float, default=5e-5)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--device", type=str, default="cpu")
