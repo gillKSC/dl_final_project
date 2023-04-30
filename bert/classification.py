@@ -53,8 +53,6 @@ def evaluate_model(model, dataloader, device, acc_only=True):
     Y_pred = []
     
     val_acc_batch = []
-    
-    
 
     for batch in dataloader:
         input_ids = batch['input_ids'].to(device)
@@ -104,6 +102,18 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
     train_acc_batch = []
     val_acc_epoch = []
 
+    with open('train_acc_epoch' + '.pickle', 'wb') as f:
+        pickle.dump((train_acc_epoch), f)
+        f.close()
+
+    with open('train_acc_batch' + '.pickle', 'wb') as f:
+        pickle.dump((train_acc_epoch), f)
+        f.close()
+        
+    with open('val_acc_epoch' + '.pickle', 'wb') as f:
+        pickle.dump((train_acc_epoch), f)
+        f.close()    
+
 
     # here, we use the AdamW optimizer. Use torch.optim.Adam.
     # instantiate it on the untrained model parameters with a learning rate of 5e-5
@@ -135,8 +145,6 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         for i, batch in enumerate(train_dataloader):
             
             #load metrics
-            val_accuracy_batch = evaluate.load('accuracy')
-            
             train_accuracy_batch = evaluate.load('accuracy')
 
             """
@@ -174,12 +182,13 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
             # update metrics for train batch
             train_accuracy_batch.add_batch(predictions=predictions, references=labels)
             acc_train = train_accuracy_batch.compute()
-            train_acc_batch.append(acc_train["accuracy"])
+            graph('train_acc_epoch',acc_train["accuracy"])
+
                   
                    
         #computer for train epoch
         acc = train_accuracy.compute()
-        train_acc_epoch.append(acc["accuracy"])
+        graph('train_acc_epoch',acc["accuracy"])
         
         # print evaluation metrics
         print(f" ===> Epoch {epoch + 1}")
@@ -189,7 +198,7 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         val_accuracy = evaluate_model(mymodel, validation_dataloader, device)
         
         #add val epoch
-        val_acc_epoch.append(val_accuracy["accuracy"])
+        graph('val_acc_epoch',["accuracy"]acc_epoch)
         print(f" - Average validation metrics: accuracy={val_accuracy}")
         
         
@@ -197,22 +206,21 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
             saved_model_path = './my_saved_model'
             torch.save(mymodel, saved_model_path)
         
-        
-
-    with open('train_acc_epoch.pickle', 'ab') as f:
-        pickle.dump((train_acc_epoch), f)
-            
-        
-    with open('train_acc_batch.pickle', 'ab') as f:
-        pickle.dump((train_acc_batch), f)
-            
-      
-    with open('val_acc_epoch.pickle', 'ab') as f:
-        pickle.dump((val_acc_epoch), f)
-        
+    
     
     return mymodel
 
+def graph(path,newdata):
+    with open(path+ '.pickle', 'rb') as f:
+        loaded_data = pickle.load(f)
+        loaded_data.append(newdata)
+        f.close()
+        
+    with open(path +'.pickle', 'wb') as f:
+        pickle.dump((loaded_data), f)
+        f.close()
+        
+    
 
 
 def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_size = 0.1):
