@@ -62,8 +62,8 @@ def evaluate_model(model, dataloader, device, acc_only=True):
 #         print(batch['labels'])
 #         raise Exception
         
-        Y_true.append(batch['labels'].tolist())
-        Y_pred.append(predictions.tolist())
+        Y_true += batch['labels'].tolist()
+        Y_pred += predictions.tolist()
         dev_accuracy.add_batch(predictions=predictions, references=batch['labels'])
       
 
