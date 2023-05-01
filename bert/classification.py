@@ -44,15 +44,18 @@ def evaluate_model(model, dataloader, device, acc_only=True):
     # load metrics
     dev_accuracy = evaluate.load('accuracy')
     
-
     # turn model into evaluation mode
     model.eval()
 
     #Y_true and Y_pred store for epoch
     Y_true = []
     Y_pred = []
+    val_acc_batch = []
     
-
+    
+    val_accuracy_batch = evaluate.load('accuracy')
+    
+    
     for batch in dataloader:
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
@@ -74,18 +77,17 @@ def evaluate_model(model, dataloader, device, acc_only=True):
         dev_accuracy.add_batch(predictions=predictions, references=batch['labels'])
         
         if acc_only == True:
-            val_accuracy_batch = evaluate.load('accuracy')
-            val_accuracy_batch.add_batch(predictions=predictions, references=batch['labels'])
-            val_acc = val_accuracy_batch.compute()
-            graph('val_acc_batch',val_acc["accuracy"])
-            print(val_acc)
+            correct = (predictions.to(device) == batch['labels'].to(device)).sum().item()
+            val_accuracy_batch = correct/len(predictions)
+            val_acc_batch.append(val_accuracy_batch)
+            
       
 
     # compute and return metrics
 #     Y_true = np.squeeze(np.array(Y_true))
 #     Y_pred = np.squeeze(np.array(Y_pred))
     
-
+    load_new_list('val_acc_batch',val_acc_batch)
     
     return dev_accuracy.compute() if acc_only else (dev_accuracy.compute(),Y_true,Y_pred)
 
@@ -106,17 +108,6 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
     val_acc_epoch = []
     val_acc_batch = []
 
-    with open('train_acc_epoch' + '.pickle', 'wb') as f:
-        pickle.dump((train_acc_epoch), f)
-        f.close()
-
-    with open('train_acc_batch' + '.pickle', 'wb') as f:
-        pickle.dump((train_acc_batch), f)
-        f.close()
-        
-    with open('val_acc_epoch' + '.pickle', 'wb') as f:
-        pickle.dump((train_acc_epoch), f)
-        f.close()    
 
     with open('val_acc_batch' + '.pickle', 'wb') as f:
         pickle.dump((val_acc_batch), f)
@@ -153,7 +144,7 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         for i, batch in enumerate(train_dataloader):
             
             #load metrics
-            train_accuracy_batch = evaluate.load('accuracy')
+            #train_accuracy_batch = evaluate.load('accuracy')
 
             """
             You need to make some changes here to make this function work.
@@ -188,15 +179,14 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
             train_accuracy.add_batch(predictions=predictions, references=labels)
             
             # update metrics for train batch
-            train_accuracy_batch.add_batch(predictions=predictions, references=labels)
-            acc_train = train_accuracy_batch.compute()
-            graph('train_acc_batch',acc_train["accuracy"])
-
+            correct = (predictions == labels).sum().item()
+            train_accuracy_batch = correct/len(predictions)
+            train_acc_batch.append(train_accuracy_batch)
                   
                    
         #computer for train epoch
         acc = train_accuracy.compute()
-        graph('train_acc_epoch',acc["accuracy"])
+        train_acc_epoch.append(acc["accuracy"])
         
         # print evaluation metrics
         print(f" ===> Epoch {epoch + 1}")
@@ -204,32 +194,47 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         
         # normally, validation would be more useful when training for many epochs
         val_accuracy = evaluate_model(mymodel, validation_dataloader, device)
-        graph('val_acc_epoch',val_accuracy["accuracy"])
         val_acc_epoch.append(val_accuracy["accuracy"])
         
         print(f" - Average validation metrics: accuracy={val_accuracy}")
         
         
-        if (epoch > 1) and (val_acc_epoch[epoch] > val_acc_epoch[epoch-1]):
+        max = 0
+        if (epoch > 1) and (val_acc_epoch[epoch] > max):
+            max = val_acc_epoch[epoch]
             saved_model_path = './my_saved_model'
             torch.save(mymodel, saved_model_path)
-    
+        
+        
+    with open('train_acc_epoch' + '.pickle', 'wb') as f:
+        pickle.dump((train_acc_epoch), f)
+        f.close()
+       
+
+    with open('train_acc_batch' + '.pickle', 'wb') as f:
+        pickle.dump((train_acc_batch), f)
+        f.close()
+        
+        
+    with open('val_acc_epoch' + '.pickle', 'wb') as f:
+        pickle.dump((train_acc_epoch), f)  
+        f.close()                 
     
     return mymodel
 
-def graph(path,newdata):
+def load_new_list(path, newdata):
     with open(path+ '.pickle', 'rb') as f:
         loaded_data = pickle.load(f)
-        loaded_data.append(newdata)
+        loaded_data = loaded_data + newdata
         f.close()
+        
+        
         
     with open(path +'.pickle', 'wb') as f:
         pickle.dump((loaded_data), f)
         f.close()
+       
         
-    
-
-
 def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_size = 0.1):
     total_length = len(dataset.x_list)
     train_idx = int(total_length * train_size)
@@ -257,7 +262,6 @@ def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_s
         
     return train_dataset, val_dataset, test_dataset
 
-
 def pre_process(model_name, batch_size, device, input_dir, filename, label_type='binary', num_labels=2, small_subset=True):
 
     dataset = TextDataset(input_dir, filename, label_type = label_type)
@@ -270,6 +274,8 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
 #     validation_dataloader = DataLoader(dataset, batch_size=batch_size, sampler=SubsetRandomSampler(train_mask))
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
     validation_dataloader = DataLoader(val_dataset, batch_size=batch_size)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
+
 
     print(" >>>>>>>> Initializing the data loaders ... ")
     
@@ -279,9 +285,9 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
                                       sampler=SubsetRandomSampler(train_mask))
         validation_dataloader = DataLoader(val_dataset, batch_size=batch_size,
                                       sampler=SubsetRandomSampler(train_mask))
-        
-    #test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
-
+       # test_dataloader = DataLoader(test_dataset, batch_size=batch_size,
+                                      #sampler=SubsetRandomSampler(train_mask))
+    
     # from Hugging Face (transformers), read their documentation to do this.
     print("Loading the model ...")
     pretrained_model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels = num_labels)
@@ -290,17 +296,15 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
     pretrained_model.to(device)
     return pretrained_model, train_dataloader, validation_dataloader #, test_dataloader
 
-
-
 # the entry point of the program
 if __name__ == "__main__":
     print(torch.cuda.is_available())
     parser = argparse.ArgumentParser()
-    parser.add_argument("--experiment", type=str, default=None)
-    parser.add_argument("--small_subset", type=str, default=False)
-    parser.add_argument("--num_epochs", type=int, default=5)
-    parser.add_argument("--lr", type=float, default=5e-5)
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--experiment", type=str, default="overfit")
+    parser.add_argument("--small_subset", type=str, default=True)
+    parser.add_argument("--num_epochs", type=int, default=2)
+    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--model", type=str, default="distilbert-base-uncased")
     parser.add_argument("--type_classification", type=str, default="binary")
@@ -317,6 +321,7 @@ if __name__ == "__main__":
     else:
         small_subset = False
     
+    num_class = 2
     if str(args.type_classification) == 'binary':
         num_class = 2
     elif str(args.type_classification) == 'multi':
@@ -328,9 +333,9 @@ if __name__ == "__main__":
                                                      args.device,
                                                      input_dir,
                                                      filename,
-                                                     label_type=args.type_classification,
+                                                     label_type = args.type_classification,
                                                      num_labels = num_class,
-                                                     small_subset=small_subset
+                                                     small_subset = small_subset
                                                     )
 
 
@@ -353,6 +358,6 @@ if __name__ == "__main__":
     plt.savefig('confusion_matrix.jpg')
 
     '''
-    test_accuracy = evaluate_model(trained_model, test_dataloader, args.device)
+    test_accuracy = evaluate_model(trained_model, test_dataloader, args.device, acc_only=False)
     print(f" - Average TEST metrics: accuracy={test_accuracy}")
     '''
