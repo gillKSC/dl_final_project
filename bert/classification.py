@@ -204,7 +204,7 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         
         if (val_acc_epoch[epoch] > max):
             max = val_acc_epoch[epoch]
-            saved_model_path = 'my_saved_model.path'
+            saved_model_path = 'my_saved_model.pth'
             torch.save(mymodel, saved_model_path)
         
         
