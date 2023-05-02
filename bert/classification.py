@@ -16,6 +16,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 import pickle
 import matplotlib.pyplot as plt
+import copy
 
 
 def print_gpu_memory():
@@ -108,7 +109,8 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
     val_acc_epoch = []
     val_acc_batch = []
     
-    max = 0
+    max_ = 0
+    Best_model = None
 
 
     with open('val_acc_batch' + '.pickle', 'wb') as f:
@@ -202,10 +204,11 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         
         
         
-        if (val_acc_epoch[epoch] > max):
-            max = val_acc_epoch[epoch]
+        if (val_acc_epoch[epoch] > max_):
+            max_ = val_acc_epoch[epoch]
             saved_model_path = 'my_saved_model.pth'
             torch.save(mymodel, saved_model_path)
+            Best_model = copy.deepcopy(mymodel)
         
         
     with open('train_acc_epoch' + '.pickle', 'wb') as f:
@@ -219,10 +222,10 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         
         
     with open('val_acc_epoch' + '.pickle', 'wb') as f:
-        pickle.dump((train_acc_epoch), f)  
+        pickle.dump((val_acc_epoch), f)  
         f.close()                 
     
-    return mymodel
+    return Best_model
 
 def load_new_list(path, newdata):
     with open(path+ '.pickle', 'rb') as f:
@@ -296,7 +299,15 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
 
     print("Moving model to device ..." + str(device))
     pretrained_model.to(device)
-    return pretrained_model, train_dataloader, validation_dataloader #, test_dataloader
+    return pretrained_model, train_dataloader, validation_dataloader, test_dataloader
+
+def plot_confusion_matrix(Y_true, Y_pred, saved_name= 'confusion_matrix.jpg'):
+    confusion_matrix_array = confusion_matrix(Y_true, Y_pred)
+    cm_display = ConfusionMatrixDisplay(confusion_matrix = confusion_matrix_array)
+    cm_display.plot()
+    plt.show(block=True)
+    plt.savefig(saved_name)
+    
 
 # the entry point of the program
 if __name__ == "__main__":
@@ -323,14 +334,13 @@ if __name__ == "__main__":
     else:
         small_subset = False
     
-    num_class = 2
     if str(args.type_classification) == 'binary':
         num_class = 2
-    elif str(args.type_classification) == 's':
+    elif str(args.type_classification) == 'multi':
         num_class = 6
 
     # load the data and models
-    pretrained_model, train_dataloader,validation_dataloader = pre_process(args.model,
+    pretrained_model, train_dataloader,validation_dataloader, test_dataloader = pre_process(args.model,
                                                      args.batch_size,
                                                      args.device,
                                                      input_dir,
@@ -348,18 +358,15 @@ if __name__ == "__main__":
     print_gpu_memory()
     
     (val_accuracy,Y_true,Y_pred) = evaluate_model(trained_model, validation_dataloader, args.device, acc_only=False)
-    #print(val_accuracy)
-    #print(Y_true)
-    #print(Y_pred)
     print(f" - Average DEV metrics: accuracy={val_accuracy}")
+    plot_confusion_matrix(Y_true, Y_pred, saved_name='confusion_matrix_validation.jpg')
 
-    confusion_matrix_array = confusion_matrix(Y_true, Y_pred)
-    cm_display = ConfusionMatrixDisplay(confusion_matrix = confusion_matrix_array)
-    cm_display.plot()
-    plt.show(block=True)
-    plt.savefig('confusion_matrix.jpg')
-
-    '''
-    test_accuracy = evaluate_model(trained_model, test_dataloader, args.device, acc_only=False)
+#     confusion_matrix_array = confusion_matrix(Y_true, Y_pred)
+#     cm_display = ConfusionMatrixDisplay(confusion_matrix = confusion_matrix_array)
+#     cm_display.plot()
+#     plt.show(block=True)
+#     plt.savefig('confusion_matrix.jpg')
+ 
+    (test_accuracy,Y_true_test,Y_pred_test) = evaluate_model(trained_model, test_dataloader, args.device, acc_only=False)
     print(f" - Average TEST metrics: accuracy={test_accuracy}")
-    '''
+    plot_confusion_matrix(Y_true_test, Y_pred_test, saved_name='confusion_matrix.jpg')
