@@ -107,6 +107,8 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
     train_acc_batch = []
     val_acc_epoch = []
     val_acc_batch = []
+    
+    max = 0
 
 
     with open('val_acc_batch' + '.pickle', 'wb') as f:
@@ -199,10 +201,10 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         print(f" - Average validation metrics: accuracy={val_accuracy}")
         
         
-        max = 0
-        if (epoch > 1) and (val_acc_epoch[epoch] > max):
+        
+        if (val_acc_epoch[epoch] > max):
             max = val_acc_epoch[epoch]
-            saved_model_path = './my_saved_model'
+            saved_model_path = 'my_saved_model.path'
             torch.save(mymodel, saved_model_path)
         
         
@@ -324,7 +326,7 @@ if __name__ == "__main__":
     num_class = 2
     if str(args.type_classification) == 'binary':
         num_class = 2
-    elif str(args.type_classification) == 'multi':
+    elif str(args.type_classification) == 's':
         num_class = 6
 
     # load the data and models
