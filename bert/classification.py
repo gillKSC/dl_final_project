@@ -10,7 +10,7 @@ import subprocess
 import random
 import numpy as np
 from loader import TextDataset
-from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
+from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler, random_split
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
@@ -65,14 +65,6 @@ def evaluate_model(model, dataloader, device, acc_only=True):
        
         predictions = output.logits
         predictions = torch.argmax(predictions, dim=1)
-#         print(predictions)
-#         print(batch['labels'])
-#         raise Exception
-        
-#         print(batch['labels'].tolist())
-#         raise Exception
-#         Y_true.append(batch['labels'].tolist())
-#         Y_pred.append(predictions.tolist())
         Y_true += batch['labels'].tolist()
         Y_pred += predictions.tolist()
         dev_accuracy.add_batch(predictions=predictions, references=batch['labels'])
@@ -239,38 +231,27 @@ def load_new_list(path, newdata):
         pickle.dump((loaded_data), f)
         f.close()
        
-        
-def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_size = 0.1):
-    total_length = len(dataset.x_list)
-    train_idx = int(total_length * train_size)
-    val_idx = int(total_length * val_size) + train_idx
+    
 
+def split_data(dataset, input_dir, filename, label_type,train_size = 0.8, val_size = 0.1):
+    total_length = len(dataset)
+    train_length = int(total_length * train_size)
+    val_length = int(total_length * val_size)
+    test_length = int(total_length - (train_length + val_length))
+    train_dataset, val_dataset, test_dataset= random_split(dataset, [train_length, val_length, test_length])
 
-    train_dataset = TextDataset(input_dir,filename,label_type,split = True)
-    train_dataset.x_list = dataset.x_list[:train_idx]
-    train_dataset.y_list = dataset.y_list[:train_idx]
-        
-    val_dataset = TextDataset(input_dir,filename,label_type,split = True)
-    val_dataset.x_list = dataset.x_list[train_idx:val_idx]
-    val_dataset.y_list = dataset.y_list[train_idx:val_idx]
-
-    test_dataset = TextDataset(input_dir,filename ,label_type,split = True)
-    test_dataset.x_list = dataset.x_list[val_idx:total_length]
-    test_dataset.y_list = dataset.y_list[val_idx:total_length]
-
-       
+    
     print("training data point", len(train_dataset))
     print("validation data point", len(val_dataset))
-    print("testing data point", len(test_dataset))
+    print("teting data point", len(test_dataset))
 
-   
         
     return train_dataset, val_dataset, test_dataset
 
-def pre_process(model_name, batch_size, device, input_dir, filename, label_type='binary', num_labels=2, small_subset=True):
+def pre_process(model_name, batch_size, device, input_dir, filename, label_type='binary', num_labels=2, small_subset=True, train_size = 0.8, val_size = 0.1):
 
     dataset = TextDataset(input_dir, filename, label_type = label_type)
-    train_dataset,val_dataset,test_dataset = split_data(dataset,input_dir,filename,label_type)
+    train_dataset,val_dataset,test_dataset = split_data(dataset, input_dir, filename, label_type, train_size = 0.8, val_size = 0.1)
 #     train_mask = range(int(len(dataset)*0.7))
 #     val_mask = range(int(len(dataset)*0.7), int(len(dataset)*0.85))
 #     test_mask = range(int(len(dataset)*0.85), int(len(dataset)*1))
@@ -299,6 +280,7 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
 
     print("Moving model to device ..." + str(device))
     pretrained_model.to(device)
+    
     return pretrained_model, train_dataloader, validation_dataloader, test_dataloader
 
 def plot_confusion_matrix(Y_true, Y_pred, saved_name= 'confusion_matrix.jpg'):
@@ -325,7 +307,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(f"Specified arguments: {args}")
     input_dir = './data/'
-    filename = 'wiki.json'
+    filename = ['wiki.json', 'bmc.json', 'factbank.json']
     # Handling argparse for small_subset param
 
     small_subset = str(args.small_subset).upper()
@@ -347,7 +329,9 @@ if __name__ == "__main__":
                                                      filename,
                                                      label_type = args.type_classification,
                                                      num_labels = num_class,
-                                                     small_subset = small_subset
+                                                     small_subset = small_subset,
+                                                     train_size = 0.8,
+                                                     val_size = 0.1
                                                     )
 
 
@@ -360,13 +344,7 @@ if __name__ == "__main__":
     (val_accuracy,Y_true,Y_pred) = evaluate_model(trained_model, validation_dataloader, args.device, acc_only=False)
     print(f" - Average DEV metrics: accuracy={val_accuracy}")
     plot_confusion_matrix(Y_true, Y_pred, saved_name='confusion_matrix_validation.jpg')
-
-#     confusion_matrix_array = confusion_matrix(Y_true, Y_pred)
-#     cm_display = ConfusionMatrixDisplay(confusion_matrix = confusion_matrix_array)
-#     cm_display.plot()
-#     plt.show(block=True)
-#     plt.savefig('confusion_matrix.jpg')
  
     (test_accuracy,Y_true_test,Y_pred_test) = evaluate_model(trained_model, test_dataloader, args.device, acc_only=False)
     print(f" - Average TEST metrics: accuracy={test_accuracy}")
-    plot_confusion_matrix(Y_true_test, Y_pred_test, saved_name='confusion_matrix.jpg')
+    plot_confusion_matrix(Y_true_test, Y_pred_test, saved_name= 'confusion_matrix_test.jpg')

@@ -1,4 +1,4 @@
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, random_split
 import json
 from collections import Counter
 
@@ -17,25 +17,38 @@ class TextDataset(Dataset):
 
         self.num_certain = 0
         self.num_uncertain = 0
+        self.x_list = []
+        self.y_list = []
         self.uncertainty_label = {"speculation_hypo_doxastic _": 1, 
-                                  "speculation_hypo_investigation _": 2,
-                                  "speculation_modal_probable_": 3,
-                                  "speculation_hypo_condition _": 4,
-                                  "multiple_uncertain": 5
-                                  }
+                          "speculation_hypo_investigation _": 2,
+                          "speculation_modal_probable_": 3,
+                          "speculation_modal_possible_": 3,
+                          "speculation_hypo_condition _": 4,
+                          "multiple_uncertain": 5
+                          }
+                                  
         
-        with open(input_dir + filename, 'r') as f:
-            self.data = json.load(f)
+        # with open(input_dir + filename, 'r') as f:
+        #     self.data = json.load(f)
             
         
-        if split == False:
-            if label_type == 'binary':
-                self.x_list, self.y_list = self.parse_binary()
-            elif label_type == 'multi':
-                self.x_list, self.y_list = self.parse_multi()
-        else:
-            self.x_list = list()
-            self.y_list = list()
+  
+        if label_type == 'binary':
+            for file in filename:
+                with open(input_dir + file, 'r') as f:
+                    ALLdata = json.load(f)
+                XList, YList = self.parse_binary(ALLdata)
+                self.x_list += XList
+                self.y_list += YList
+
+        elif label_type == 'multi':
+            for file in filename:
+                with open(input_dir + file, 'r') as f:
+                    ALLdata = json.load(f)
+                XList, YList = self.parse_multi(ALLdata)
+                self.x_list += XList
+                self.y_list += YList
+
         
             
 
@@ -108,12 +121,12 @@ class TextDataset(Dataset):
             'labels': self.y_list[idx]  # labels are the answers (yes/no)
             }
 
-    def parse_binary(self):
+    def parse_binary(self, ALLdata):
         certain = 0
         uncertain = 1
         x_list = []
         y_list = []
-        Document = self.data['Annotation']['DocumentSet']['Document']
+        Document = ALLdata['Annotation']['DocumentSet']['Document']
         for doc in Document:
             DocumentPart = doc['DocumentPart']
             for paragraph in DocumentPart:
@@ -148,11 +161,11 @@ class TextDataset(Dataset):
         assert len(x_list) == len(y_list)
         return x_list, y_list
 
-    def parse_multi(self):
+    def parse_multi(self, ALLdata):
         certain = 0
         x_list = []
         y_list = []
-        Document = self.data['Annotation']['DocumentSet']['Document']
+        Document = ALLdata['Annotation']['DocumentSet']['Document']
         for doc in Document:
             DocumentPart = doc['DocumentPart']
             for paragraph in DocumentPart:
@@ -181,24 +194,30 @@ class TextDataset(Dataset):
           
      
 def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_size = 0.1):
-    total_length = len(dataset.x_list)
-    train_idx = int(total_length * train_size)
-    val_idx = int(total_length * val_size) + train_idx
+    total_length = len(dataset)
+    # train_idx = int(total_length * train_size)
+    # val_idx = int(total_length * val_size) + train_idx
+    # print(train_idx)
+    # print(val_idx)
+    train_length = int(total_length * train_size)
+    val_length = int(total_length * val_size)
+    test_length = int(total_length - (train_length + val_length))
 
-
-    train_dataset = TextDataset(input_dir,filename,label_type,split = True)
-    train_dataset.x_list = dataset.x_list[:train_idx]
-    train_dataset.y_list = dataset.y_list[:train_idx]
+    # train_dataset = TextDataset(input_dir,filename,label_type,split = True)
+    # train_dataset.x_list = dataset.x_list[:train_idx]
+    # train_dataset.y_list = dataset.y_list[:train_idx]
         
-    val_dataset = TextDataset(input_dir,filename,label_type,split = True)
-    val_dataset.x_list = dataset.x_list[train_idx:val_idx]
-    val_dataset.y_list = dataset.y_list[train_idx:val_idx]
+    # val_dataset = TextDataset(input_dir,filename,label_type,split = True)
+    # val_dataset.x_list = dataset.x_list[train_idx:val_idx]
+    # val_dataset.y_list = dataset.y_list[train_idx:val_idx]
 
-    test_dataset = TextDataset(input_dir,filename ,label_type,split = True)
-    test_dataset.x_list = dataset.x_list[val_idx:total_length]
-    test_dataset.y_list = dataset.y_list[val_idx:total_length]
+    # test_dataset = TextDataset(input_dir,filename ,label_type,split = True)
+    # test_dataset.x_list = dataset.x_list[val_idx:total_length]
+    # test_dataset.y_list = dataset.y_list[val_idx:total_length]
+    train_dataset, val_dataset, test_dataset= random_split(dataset, [train_length, val_length, test_length])
 
-       
+
+    
     print("training data point", len(train_dataset))
     print("validation data point", len(val_dataset))
     print("teting data point", len(test_dataset))
@@ -209,9 +228,10 @@ def split_data(dataset, input_dir, filename , label_type,train_size = 0.8, val_s
     
 
 if __name__ == '__main__':
-    input_dir = './data'
-    filename = 'wiki.json'
-    label_type = 'multi'
+    input_dir = '/content/'
+    #filename = 'wiki.json'
+    filename = ['bmc.json', 'wiki.json', 'factbank.json', 'fly.json', 'hbc.json']
+    label_type = 'binary'
     train_batch_size = 2
     val_batch_size = 5
     test_batch_size = 5
@@ -237,3 +257,4 @@ if __name__ == '__main__':
         print(X)
         print(Y)
         raise Exception
+
