@@ -48,10 +48,7 @@ class TextDataset(Dataset):
                 XList, YList = self.parse_multi(ALLdata)
                 self.x_list += XList
                 self.y_list += YList
-
-        
-            
-
+      
     def max_occurrences(self, lst):
         """
         Returns the item with the maximum occurrences in a list. 

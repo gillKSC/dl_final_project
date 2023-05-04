@@ -13,6 +13,9 @@ from loader import TextDataset
 from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler, random_split
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
 import pickle
 import matplotlib.pyplot as plt
@@ -271,8 +274,8 @@ def pre_process(model_name, batch_size, device, input_dir, filename, label_type=
                                       sampler=SubsetRandomSampler(train_mask))
         validation_dataloader = DataLoader(val_dataset, batch_size=batch_size,
                                       sampler=SubsetRandomSampler(train_mask))
-       # test_dataloader = DataLoader(test_dataset, batch_size=batch_size,
-                                      #sampler=SubsetRandomSampler(train_mask))
+        test_dataloader = DataLoader(test_dataset, batch_size=batch_size,
+                                      sampler=SubsetRandomSampler(train_mask))
     
     # from Hugging Face (transformers), read their documentation to do this.
     print("Loading the model ...")
@@ -307,7 +310,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(f"Specified arguments: {args}")
     input_dir = './data/'
-    filename = ['wiki.json', 'bmc.json', 'factbank.json']
+    filename = ['wiki.json', 'bmc.json', 'factbank.json','fly.json','hbc.json']
     # Handling argparse for small_subset param
 
     small_subset = str(args.small_subset).upper()
@@ -348,3 +351,35 @@ if __name__ == "__main__":
     (test_accuracy,Y_true_test,Y_pred_test) = evaluate_model(trained_model, test_dataloader, args.device, acc_only=False)
     print(f" - Average TEST metrics: accuracy={test_accuracy}")
     plot_confusion_matrix(Y_true_test, Y_pred_test, saved_name= 'confusion_matrix_test.jpg')
+    
+    
+    certain = 0
+    uncertain = 1
+    
+    #calculating precision, f-1 and recall for test
+    if str(args.type_classification) == 'binary':        
+        print("binary certain precision for score: {:.2f}".format(precision_score(Y_true_test, Y_pred_test, average='binary', pos_label = certain)))        
+        print("binary uncertain precision for score: {:.2f}".format(precision_score(Y_true_test, Y_pred_test, average='binary', pos_label = uncertain)))
+        
+        print("binary certain f-1 score: {:.2f}".format(f1_score(Y_true_test, Y_pred_test, average='binary', pos_label = certain)))
+        print("binary uncertain f-1 score: {:.2f}".format(f1_score(Y_true_test, Y_pred_test, average='binary', pos_label = uncertain)))
+        
+        print("binary certain recall score: {:.2f}".format(recall_score(Y_true_test, Y_pred_test, average='binary', pos_label=certain)))
+        print("binary uncertain recall score: {:.2f}".format(recall_score(Y_true_test, Y_pred_test, average='binary', pos_label=uncertain)))
+
+
+
+    else:
+        precision = precision_score(Y_true_test, Y_pred_test, average=None)
+        recall = recall_score(Y_true_test, Y_pred_test, average=None)
+        f1 = f1_score(Y_true_test, Y_pred_test, average=None)
+
+        # print the precision for each label
+        for i, label in enumerate(precision):
+            print(f"Precision for label {i}: {label:.2f}")
+
+        for i, label in enumerate(recall):
+            print(f"recall for label {i}: {label:.2f}")
+
+        for i, label in enumerate(f1):
+            print(f"f1 score for label {i}: {label:.2f}")
