@@ -254,7 +254,7 @@ def split_data(dataset, input_dir, filename, label_type,train_size = 0.8, val_si
 def pre_process(model_name, batch_size, device, input_dir, filename, label_type='binary', num_labels=2, small_subset=True, train_size = 0.8, val_size = 0.1):
 
     dataset = TextDataset(input_dir, filename, label_type = label_type)
-    train_dataset,val_dataset,test_dataset = split_data(dataset, input_dir, filename, label_type, train_size = 0.8, val_size = 0.1)
+    train_dataset,val_dataset,test_dataset = split_data(dataset, input_dir, filename, label_type, train_size = train_size, val_size = val_size)
 #     train_mask = range(int(len(dataset)*0.7))
 #     val_mask = range(int(len(dataset)*0.7), int(len(dataset)*0.85))
 #     test_mask = range(int(len(dataset)*0.85), int(len(dataset)*1))
@@ -333,7 +333,7 @@ if __name__ == "__main__":
                                                      label_type = args.type_classification,
                                                      num_labels = num_class,
                                                      small_subset = small_subset,
-                                                     train_size = 0.8,
+                                                     train_size = 0.7,
                                                      val_size = 0.1
                                                     )
 
@@ -383,3 +383,5 @@ if __name__ == "__main__":
 
         for i, label in enumerate(f1):
             print(f"f1 score for label {i}: {label:.2f}")
+
+        
