@@ -203,7 +203,7 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         
         if (val_acc_epoch[epoch] > max_):
             max_ = val_acc_epoch[epoch]
-            saved_model_path = f'saved_models/model_{classifier_name}.pt'
+            saved_model_path = f'saved_models/model_{classifier_name}'
             #torch.save(mymodel, saved_model_path)
             Best_model = copy.deepcopy(mymodel)
             Best_model.save_pretrained(saved_model_path)
