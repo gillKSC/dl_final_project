@@ -22,6 +22,8 @@ import matplotlib.pyplot as plt
 import copy
 
 
+classifier_name = 'same_domain_wiki_multi'
+
 def print_gpu_memory():
     """
     Print the amount of GPU memory used by the current process
@@ -83,7 +85,7 @@ def evaluate_model(model, dataloader, device, acc_only=True):
 #     Y_true = np.squeeze(np.array(Y_true))
 #     Y_pred = np.squeeze(np.array(Y_pred))
     
-    load_new_list('val_acc_batch',val_acc_batch)
+    load_new_list(f'results/{classifier_name}_val_acc_batch',val_acc_batch)
     
     return dev_accuracy.compute() if acc_only else (dev_accuracy.compute(),Y_true,Y_pred)
 
@@ -106,9 +108,9 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
     
     max_ = 0
     Best_model = None
-
-
-    with open('val_acc_batch' + '.pickle', 'wb') as f:
+    
+    
+    with open(f'results/{classifier_name}_val_acc_batch' + '.pickle', 'wb') as f:
         pickle.dump((val_acc_batch), f)
         f.close()
 
@@ -201,24 +203,31 @@ def train(mymodel, num_epochs, train_dataloader, validation_dataloader,device, l
         
         if (val_acc_epoch[epoch] > max_):
             max_ = val_acc_epoch[epoch]
-            saved_model_path = 'my_saved_model.pth'
-            torch.save(mymodel, saved_model_path)
+            saved_model_path = f'saved_models/model_{classifier_name}.pt'
+            #torch.save(mymodel, saved_model_path)
             Best_model = copy.deepcopy(mymodel)
+            Best_model.save_pretrained(saved_model_path)
         
         
-    with open('train_acc_epoch' + '.pickle', 'wb') as f:
+    with open(f'results/{classifier_name}_train_acc_epoch' + '.pickle', 'wb') as f:
         pickle.dump((train_acc_epoch), f)
         f.close()
        
 
-    with open('train_acc_batch' + '.pickle', 'wb') as f:
+    with open(f'results/{classifier_name}_train_acc_batch' + '.pickle', 'wb') as f:
         pickle.dump((train_acc_batch), f)
         f.close()
         
         
-    with open('val_acc_epoch' + '.pickle', 'wb') as f:
+    with open(f'results/{classifier_name}_val_acc_epoch' + '.pickle', 'wb') as f:
         pickle.dump((val_acc_epoch), f)  
-        f.close()                 
+        f.close()
+        
+        
+    with open(f'results/{classifier_name}_val_acc_batch' + '.pickle', 'wb') as f:
+        pickle.dump((val_acc_batch), f)
+        f.close()
+        
     
     return Best_model
 
@@ -310,7 +319,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(f"Specified arguments: {args}")
     input_dir = './data/'
-    filename = ['wiki.json', 'bmc.json', 'factbank.json','fly.json','hbc.json']
+    # All: ['wiki.json', 'bmc.json', 'factbank.json','fly.json','hbc.json']
+    filename = ['wiki.json']
     # Handling argparse for small_subset param
 
     small_subset = str(args.small_subset).upper()
@@ -346,11 +356,11 @@ if __name__ == "__main__":
     
     (val_accuracy,Y_true,Y_pred) = evaluate_model(trained_model, validation_dataloader, args.device, acc_only=False)
     print(f" - Average DEV metrics: accuracy={val_accuracy}")
-    plot_confusion_matrix(Y_true, Y_pred, saved_name='confusion_matrix_validation.jpg')
+    plot_confusion_matrix(Y_true, Y_pred, saved_name='results/confusion_matrix_validation_swm.jpg')
  
     (test_accuracy,Y_true_test,Y_pred_test) = evaluate_model(trained_model, test_dataloader, args.device, acc_only=False)
     print(f" - Average TEST metrics: accuracy={test_accuracy}")
-    plot_confusion_matrix(Y_true_test, Y_pred_test, saved_name= 'confusion_matrix_test.jpg')
+    plot_confusion_matrix(Y_true_test, Y_pred_test, saved_name='results/confusion_matrix_test_swm.jpg')
     
     
     certain = 0
