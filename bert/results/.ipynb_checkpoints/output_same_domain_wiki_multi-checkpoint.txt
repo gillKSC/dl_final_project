@@ -1,0 +1,40 @@
+Some weights of the model checkpoint at distilbert-base-uncased were not used when initializing DistilBertForSequenceClassification: ['vocab_projector.bias', 'vocab_layer_norm.bias', 'vocab_projector.weight', 'vocab_transform.weight', 'vocab_transform.bias', 'vocab_layer_norm.weight']
+- This IS expected if you are initializing DistilBertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing DistilBertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some weights of DistilBertForSequenceClassification were not initialized from the model checkpoint at distilbert-base-uncased and are newly initialized: ['classifier.bias', 'pre_classifier.bias', 'pre_classifier.weight', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+True
+Specified arguments: Namespace(batch_size=16, device='cuda', experiment='overfit', lr=0.0001, model='distilbert-base-uncased', num_epochs=10, small_subset='false', type_classification='multi')
+training data point 10845
+validation data point 1549
+teting data point 3100
+ >>>>>>>> Initializing the data loaders ... 
+Loading the model ...
+Moving model to device ...cuda
+ >>>>>>>>  Starting training ... 
+ >>>>>>>>  Initializing optimizer
+Epoch 1 training:
+ ===> Epoch 1
+ - Average training metrics: accuracy={'accuracy': 0.9063162747810051}
+ - Average validation metrics: accuracy={'accuracy': 0.9315687540348612}
+Traceback (most recent call last):
+  File "/root/anaconda3/envs/classification_env/lib/python3.7/site-packages/torch/serialization.py", line 423, in save
+    _save(obj, opened_zipfile, pickle_module, pickle_protocol)
+  File "/root/anaconda3/envs/classification_env/lib/python3.7/site-packages/torch/serialization.py", line 650, in _save
+    zip_file.write_record(name, storage.data_ptr(), num_bytes)
+RuntimeError: [enforce fail at inline_container.cc:445] . PytorchStreamWriter failed writing file data/46: file write failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "classification.py", line 352, in <module>
+    trained_model = train(pretrained_model, args.num_epochs, train_dataloader, validation_dataloader, args.device, args.lr)
+  File "classification.py", line 209, in train
+    Best_model.save_pretrained(saved_model_path)
+  File "/root/anaconda3/envs/classification_env/lib/python3.7/site-packages/transformers/modeling_utils.py", line 1701, in save_pretrained
+    save_function(shard, os.path.join(save_directory, shard_file))
+  File "/root/anaconda3/envs/classification_env/lib/python3.7/site-packages/torch/serialization.py", line 424, in save
+    return
+  File "/root/anaconda3/envs/classification_env/lib/python3.7/site-packages/torch/serialization.py", line 290, in __exit__
+    self.file_like.write_end_of_file()
+RuntimeError: [enforce fail at inline_container.cc:325] . unexpected pos 159174912 vs 159174800

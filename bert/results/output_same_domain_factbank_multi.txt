@@ -1,0 +1,104 @@
+Some weights of the model checkpoint at distilbert-base-uncased were not used when initializing DistilBertForSequenceClassification: ['vocab_transform.weight', 'vocab_layer_norm.bias', 'vocab_projector.weight', 'vocab_transform.bias', 'vocab_projector.bias', 'vocab_layer_norm.weight']
+- This IS expected if you are initializing DistilBertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing DistilBertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some weights of DistilBertForSequenceClassification were not initialized from the model checkpoint at distilbert-base-uncased and are newly initialized: ['classifier.bias', 'pre_classifier.bias', 'pre_classifier.weight', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+/root/anaconda3/envs/classification_env/lib/python3.7/site-packages/sklearn/metrics/_classification.py:1248: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, msg_start, len(result))
+True
+Specified arguments: Namespace(batch_size=16, device='cuda', experiment='overfit', lr=0.0001, model='distilbert-base-uncased', num_epochs=10, small_subset='false', type_classification='multi')
+training data point 1486
+validation data point 212
+teting data point 425
+ >>>>>>>> Initializing the data loaders ... 
+Loading the model ...
+Moving model to device ...cuda
+ >>>>>>>>  Starting training ... 
+ >>>>>>>>  Initializing optimizer
+Epoch 1 training:
+ ===> Epoch 1
+ - Average training metrics: accuracy={'accuracy': 0.7772543741588156}
+ - Average validation metrics: accuracy={'accuracy': 0.8726415094339622}
+Epoch 2 training:
+ ===> Epoch 2
+ - Average training metrics: accuracy={'accuracy': 0.8687752355316285}
+ - Average validation metrics: accuracy={'accuracy': 0.9009433962264151}
+Epoch 3 training:
+ ===> Epoch 3
+ - Average training metrics: accuracy={'accuracy': 0.9387617765814267}
+ - Average validation metrics: accuracy={'accuracy': 0.9198113207547169}
+Epoch 4 training:
+ ===> Epoch 4
+ - Average training metrics: accuracy={'accuracy': 0.9616419919246298}
+ - Average validation metrics: accuracy={'accuracy': 0.9198113207547169}
+Epoch 5 training:
+ ===> Epoch 5
+ - Average training metrics: accuracy={'accuracy': 0.9771197846567967}
+ - Average validation metrics: accuracy={'accuracy': 0.9198113207547169}
+Epoch 6 training:
+ ===> Epoch 6
+ - Average training metrics: accuracy={'accuracy': 0.9798115746971736}
+ - Average validation metrics: accuracy={'accuracy': 0.9198113207547169}
+Epoch 7 training:
+ ===> Epoch 7
+ - Average training metrics: accuracy={'accuracy': 0.9872139973082099}
+ - Average validation metrics: accuracy={'accuracy': 0.9150943396226415}
+Epoch 8 training:
+ ===> Epoch 8
+ - Average training metrics: accuracy={'accuracy': 0.9892328398384926}
+ - Average validation metrics: accuracy={'accuracy': 0.8915094339622641}
+Epoch 9 training:
+ ===> Epoch 9
+ - Average training metrics: accuracy={'accuracy': 0.9925975773889637}
+ - Average validation metrics: accuracy={'accuracy': 0.9009433962264151}
+Epoch 10 training:
+ ===> Epoch 10
+ - Average training metrics: accuracy={'accuracy': 0.9986541049798116}
+ - Average validation metrics: accuracy={'accuracy': 0.9009433962264151}
+torch.cuda.memory_allocated: 0.749379GB
+torch.cuda.memory_reserved: 8.257812GB
+torch.cuda.max_memory_reserved: 8.257812GB
+Fri May  5 20:57:02 2023       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 520.61.05    Driver Version: 520.61.05    CUDA Version: 11.8     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla V100-FHHL...  On   | 00000000:09:00.0 Off |                    0 |
+| N/A   73C    P0    48W / 150W |   9390MiB / 16384MiB |      0%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
++-----------------------------------------------------------------------------+
+
+ - Average DEV metrics: accuracy={'accuracy': 0.9198113207547169}
+ - Average TEST metrics: accuracy={'accuracy': 0.9364705882352942}
+Precision for label 0: 0.97
+Precision for label 1: 0.86
+Precision for label 2: 1.00
+Precision for label 3: 0.76
+Precision for label 4: 0.65
+Precision for label 5: 0.00
+recall for label 0: 0.97
+recall for label 1: 0.67
+recall for label 2: 1.00
+recall for label 3: 0.73
+recall for label 4: 0.79
+recall for label 5: 0.00
+f1 score for label 0: 0.97
+f1 score for label 1: 0.75
+f1 score for label 2: 1.00
+f1 score for label 3: 0.75
+f1 score for label 4: 0.71
+f1 score for label 5: 0.00

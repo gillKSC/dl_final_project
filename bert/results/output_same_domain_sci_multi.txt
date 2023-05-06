@@ -1,0 +1,102 @@
+Some weights of the model checkpoint at distilbert-base-uncased were not used when initializing DistilBertForSequenceClassification: ['vocab_layer_norm.bias', 'vocab_projector.bias', 'vocab_layer_norm.weight', 'vocab_transform.bias', 'vocab_projector.weight', 'vocab_transform.weight']
+- This IS expected if you are initializing DistilBertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing DistilBertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some weights of DistilBertForSequenceClassification were not initialized from the model checkpoint at distilbert-base-uncased and are newly initialized: ['pre_classifier.bias', 'classifier.bias', 'pre_classifier.weight', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+True
+Specified arguments: Namespace(batch_size=16, device='cuda', experiment='overfit', lr=0.0001, model='distilbert-base-uncased', num_epochs=10, small_subset='false', type_classification='multi')
+training data point 11913
+validation data point 1701
+teting data point 3405
+ >>>>>>>> Initializing the data loaders ... 
+Loading the model ...
+Moving model to device ...cuda
+ >>>>>>>>  Starting training ... 
+ >>>>>>>>  Initializing optimizer
+Epoch 1 training:
+ ===> Epoch 1
+ - Average training metrics: accuracy={'accuracy': 0.9010324855200201}
+ - Average validation metrics: accuracy={'accuracy': 0.9159318048206937}
+Epoch 2 training:
+ ===> Epoch 2
+ - Average training metrics: accuracy={'accuracy': 0.9415764291110551}
+ - Average validation metrics: accuracy={'accuracy': 0.9329805996472663}
+Epoch 3 training:
+ ===> Epoch 3
+ - Average training metrics: accuracy={'accuracy': 0.9644925711407706}
+ - Average validation metrics: accuracy={'accuracy': 0.9382716049382716}
+Epoch 4 training:
+ ===> Epoch 4
+ - Average training metrics: accuracy={'accuracy': 0.9790984638630068}
+ - Average validation metrics: accuracy={'accuracy': 0.940623162845385}
+Epoch 5 training:
+ ===> Epoch 5
+ - Average training metrics: accuracy={'accuracy': 0.9863174683119281}
+ - Average validation metrics: accuracy={'accuracy': 0.9423868312757202}
+Epoch 6 training:
+ ===> Epoch 6
+ - Average training metrics: accuracy={'accuracy': 0.9904306220095693}
+ - Average validation metrics: accuracy={'accuracy': 0.9229864785420341}
+Epoch 7 training:
+ ===> Epoch 7
+ - Average training metrics: accuracy={'accuracy': 0.9950474271803912}
+ - Average validation metrics: accuracy={'accuracy': 0.9412110523221634}
+Epoch 8 training:
+ ===> Epoch 8
+ - Average training metrics: accuracy={'accuracy': 0.9968941492487199}
+ - Average validation metrics: accuracy={'accuracy': 0.9376837154614932}
+Epoch 9 training:
+ ===> Epoch 9
+ - Average training metrics: accuracy={'accuracy': 0.9984890455804584}
+ - Average validation metrics: accuracy={'accuracy': 0.93885949441505}
+Epoch 10 training:
+ ===> Epoch 10
+ - Average training metrics: accuracy={'accuracy': 0.9999160580878033}
+ - Average validation metrics: accuracy={'accuracy': 0.9394473838918284}
+torch.cuda.memory_allocated: 0.749379GB
+torch.cuda.memory_reserved: 8.304688GB
+torch.cuda.max_memory_reserved: 8.304688GB
+Fri May  5 19:30:49 2023       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 520.61.05    Driver Version: 520.61.05    CUDA Version: 11.8     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla V100-FHHL...  On   | 00000000:09:00.0 Off |                    0 |
+| N/A   78C    P0    50W / 150W |   9438MiB / 16384MiB |     54%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
++-----------------------------------------------------------------------------+
+
+ - Average DEV metrics: accuracy={'accuracy': 0.9423868312757202}
+ - Average TEST metrics: accuracy={'accuracy': 0.9427312775330396}
+Precision for label 0: 0.97
+Precision for label 1: 0.83
+Precision for label 2: 0.77
+Precision for label 3: 0.91
+Precision for label 4: 0.50
+Precision for label 5: 0.65
+recall for label 0: 0.97
+recall for label 1: 0.88
+recall for label 2: 0.82
+recall for label 3: 0.90
+recall for label 4: 0.59
+recall for label 5: 0.39
+f1 score for label 0: 0.97
+f1 score for label 1: 0.85
+f1 score for label 2: 0.80
+f1 score for label 3: 0.91
+f1 score for label 4: 0.54
+f1 score for label 5: 0.49
