@@ -1,8 +1,7 @@
-Some weights of the model checkpoint at distilbert-base-uncased were not used when initializing DistilBertForSequenceClassification: ['vocab_projector.weight', 'vocab_transform.bias', 'vocab_transform.weight', 'vocab_layer_norm.weight', 'vocab_layer_norm.bias', 'vocab_projector.bias']
-- This IS expected if you are initializing DistilBertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
-- This IS NOT expected if you are initializing DistilBertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-Some weights of DistilBertForSequenceClassification were not initialized from the model checkpoint at distilbert-base-uncased and are newly initialized: ['classifier.bias', 'classifier.weight', 'pre_classifier.bias', 'pre_classifier.weight']
-You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Downloading (…)okenizer_config.json:   0%|                                                                                                                                                | 0.00/28.0 [00:00<?, ?B/s]Downloading (…)okenizer_config.json: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 28.0/28.0 [00:00<00:00, 2.86kB/s]
+Downloading (…)solve/main/vocab.txt:   0%|                                                                                                                                                | 0.00/232k [00:00<?, ?B/s]Downloading (…)solve/main/vocab.txt: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 232k/232k [00:00<00:00, 4.18MB/s]
+Downloading (…)/main/tokenizer.json:   0%|                                                                                                                                                | 0.00/466k [00:00<?, ?B/s]Downloading (…)/main/tokenizer.json: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 466k/466k [00:00<00:00, 9.77MB/s]
+Downloading (…)lve/main/config.json:   0%|                                                                                                                                                 | 0.00/483 [00:00<?, ?B/s]Downloading (…)lve/main/config.json: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 483/483 [00:00<00:00, 385kB/s]
 True
 Specified arguments: Namespace(batch_size=16, device='cuda', experiment='overfit', lr=0.0001, model='distilbert-base-uncased', num_epochs=10, small_subset='false', type_classification='multi')
 training data point 10845
@@ -10,31 +9,100 @@ validation data point 1549
 teting data point 3100
  >>>>>>>> Initializing the data loaders ... 
 Loading the model ...
+Downloading pytorch_model.bin:   0%|                                                                                                                                                      | 0.00/268M [00:00<?, ?B/s]Downloading pytorch_model.bin:   4%|█████▌                                                                                                                                       | 10.5M/268M [00:00<00:03, 64.6MB/s]Downloading pytorch_model.bin:  12%|████████████████▌                                                                                                                            | 31.5M/268M [00:00<00:02, 97.7MB/s]Downloading pytorch_model.bin:  20%|███████████████████████████▊                                                                                                                  | 52.4M/268M [00:00<00:02, 106MB/s]Downloading pytorch_model.bin:  27%|██████████████████████████████████████▉                                                                                                       | 73.4M/268M [00:00<00:01, 111MB/s]Downloading pytorch_model.bin:  35%|██████████████████████████████████████████████████                                                                                            | 94.4M/268M [00:00<00:01, 113MB/s]Downloading pytorch_model.bin:  43%|█████████████████████████████████████████████████████████████▌                                                                                 | 115M/268M [00:01<00:01, 114MB/s]Downloading pytorch_model.bin:  51%|████████████████████████████████████████████████████████████████████████▋                                                                      | 136M/268M [00:01<00:01, 115MB/s]Downloading pytorch_model.bin:  59%|███████████████████████████████████████████████████████████████████████████████████▉                                                           | 157M/268M [00:01<00:00, 115MB/s]Downloading pytorch_model.bin:  67%|███████████████████████████████████████████████████████████████████████████████████████████████▏                                               | 178M/268M [00:01<00:00, 115MB/s]Downloading pytorch_model.bin:  74%|██████████████████████████████████████████████████████████████████████████████████████████████████████████▎                                    | 199M/268M [00:01<00:00, 116MB/s]Downloading pytorch_model.bin:  82%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▌                         | 220M/268M [00:01<00:00, 116MB/s]Downloading pytorch_model.bin:  90%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▋              | 241M/268M [00:02<00:00, 116MB/s]Downloading pytorch_model.bin:  98%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▉   | 262M/268M [00:02<00:00, 116MB/s]Downloading pytorch_model.bin: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 268M/268M [00:02<00:00, 113MB/s]
+Some weights of the model checkpoint at distilbert-base-uncased were not used when initializing DistilBertForSequenceClassification: ['vocab_transform.bias', 'vocab_projector.weight', 'vocab_layer_norm.weight', 'vocab_transform.weight', 'vocab_layer_norm.bias', 'vocab_projector.bias']
+- This IS expected if you are initializing DistilBertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing DistilBertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some weights of DistilBertForSequenceClassification were not initialized from the model checkpoint at distilbert-base-uncased and are newly initialized: ['classifier.weight', 'pre_classifier.weight', 'classifier.bias', 'pre_classifier.bias']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 Moving model to device ...cuda
  >>>>>>>>  Starting training ... 
  >>>>>>>>  Initializing optimizer
+Downloading builder script:   0%|                                                                                                                                                        | 0.00/4.20k [00:00<?, ?B/s]Downloading builder script: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4.20k/4.20k [00:00<00:00, 1.88MB/s]huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+
 Epoch 1 training:
  ===> Epoch 1
- - Average training metrics: accuracy={'accuracy': 0.9072383586906408}
- - Average validation metrics: accuracy={'accuracy': 0.921239509360878}
-Traceback (most recent call last):
-  File "/root/anaconda3/envs/classification_env/lib/python3.7/site-packages/torch/serialization.py", line 423, in save
-    _save(obj, opened_zipfile, pickle_module, pickle_protocol)
-  File "/root/anaconda3/envs/classification_env/lib/python3.7/site-packages/torch/serialization.py", line 650, in _save
-    zip_file.write_record(name, storage.data_ptr(), num_bytes)
-RuntimeError: [enforce fail at inline_container.cc:445] . PytorchStreamWriter failed writing file data/46: file write failed
+ - Average training metrics: accuracy={'accuracy': 0.9114799446749654}
+ - Average validation metrics: accuracy={'accuracy': 0.9335054874112331}
+Epoch 2 training:
+ ===> Epoch 2
+ - Average training metrics: accuracy={'accuracy': 0.9487321346242508}
+ - Average validation metrics: accuracy={'accuracy': 0.9412524209167205}
+Epoch 3 training:
+ ===> Epoch 3
+ - Average training metrics: accuracy={'accuracy': 0.9699400645458737}
+ - Average validation metrics: accuracy={'accuracy': 0.9535183989670756}
+Epoch 4 training:
+ ===> Epoch 4
+ - Average training metrics: accuracy={'accuracy': 0.9803596127247579}
+ - Average validation metrics: accuracy={'accuracy': 0.9522272433828276}
+Epoch 5 training:
+ ===> Epoch 5
+ - Average training metrics: accuracy={'accuracy': 0.9864453665283541}
+ - Average validation metrics: accuracy={'accuracy': 0.9502905100064558}
+Epoch 6 training:
+ ===> Epoch 6
+ - Average training metrics: accuracy={'accuracy': 0.9932687874596589}
+ - Average validation metrics: accuracy={'accuracy': 0.9522272433828276}
+Epoch 7 training:
+ ===> Epoch 7
+ - Average training metrics: accuracy={'accuracy': 0.9952973720608576}
+ - Average validation metrics: accuracy={'accuracy': 0.9464170432537121}
+Epoch 8 training:
+ ===> Epoch 8
+ - Average training metrics: accuracy={'accuracy': 0.9972337482710927}
+ - Average validation metrics: accuracy={'accuracy': 0.9509360877985797}
+Epoch 9 training:
+ ===> Epoch 9
+ - Average training metrics: accuracy={'accuracy': 0.9988012909174735}
+ - Average validation metrics: accuracy={'accuracy': 0.9535183989670756}
+Epoch 10 training:
+ ===> Epoch 10
+ - Average training metrics: accuracy={'accuracy': 0.999354541263255}
+ - Average validation metrics: accuracy={'accuracy': 0.9535183989670756}
+torch.cuda.memory_allocated: 0.749379GB
+torch.cuda.memory_reserved: 8.257812GB
+torch.cuda.max_memory_reserved: 8.257812GB
+Sat May  6 08:27:43 2023       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 520.61.05    Driver Version: 520.61.05    CUDA Version: 11.8     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla V100-FHHL...  On   | 00000000:06:00.0 Off |                    0 |
+| N/A   76C    P0    42W / 150W |   9390MiB / 16384MiB |     11%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
++-----------------------------------------------------------------------------+
 
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "classification.py", line 352, in <module>
-    trained_model = train(pretrained_model, args.num_epochs, train_dataloader, validation_dataloader, args.device, args.lr)
-  File "classification.py", line 209, in train
-    Best_model.save_pretrained(saved_model_path)
-  File "/root/anaconda3/envs/classification_env/lib/python3.7/site-packages/transformers/modeling_utils.py", line 1701, in save_pretrained
-    save_function(shard, os.path.join(save_directory, shard_file))
-  File "/root/anaconda3/envs/classification_env/lib/python3.7/site-packages/torch/serialization.py", line 424, in save
-    return
-  File "/root/anaconda3/envs/classification_env/lib/python3.7/site-packages/torch/serialization.py", line 290, in __exit__
-    self.file_like.write_end_of_file()
-RuntimeError: [enforce fail at inline_container.cc:325] . unexpected pos 159174912 vs 159174800
+ - Average DEV metrics: accuracy={'accuracy': 0.9535183989670756}
+ - Average TEST metrics: accuracy={'accuracy': 0.9451612903225807}
+Precision for label 0: 0.97
+Precision for label 1: 0.84
+Precision for label 2: 0.56
+Precision for label 3: 0.85
+Precision for label 4: 0.80
+Precision for label 5: 0.44
+recall for label 0: 0.98
+recall for label 1: 0.83
+recall for label 2: 0.56
+recall for label 3: 0.81
+recall for label 4: 0.54
+recall for label 5: 0.42
+f1 score for label 0: 0.98
+f1 score for label 1: 0.84
+f1 score for label 2: 0.56
+f1 score for label 3: 0.83
+f1 score for label 4: 0.64
+f1 score for label 5: 0.43
